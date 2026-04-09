@@ -140,9 +140,21 @@ app.get('/api/user', checkAuth, (req, res) => {
 
 // Export to PDF
 app.get('/api/export/pdf', checkAuth, (req, res) => {
-  db.all(`SELECT * FROM data WHERE user_id = ? ORDER BY created_at DESC`, [req.session.userId], (err, rows) => {
+  const monthFilter = req.query.month;
+  let query = `SELECT * FROM data WHERE user_id = ? ORDER BY created_at DESC`;
+  
+  db.all(query, [req.session.userId], (err, rows) => {
     if (err || !rows) {
       return res.status(500).json({ success: false, message: 'Error exporting data' });
+    }
+
+    // Filter by month if provided
+    if (monthFilter) {
+      rows = rows.filter(row => {
+        const date = new Date(row.tarikh);
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        return month === monthFilter;
+      });
     }
 
     const doc = new PDFDocument({ margin: 30, size: 'A4', bufferPages: true });
@@ -228,9 +240,20 @@ app.get('/api/export/pdf', checkAuth, (req, res) => {
 
 // Export to Excel
 app.get('/api/export/excel', checkAuth, (req, res) => {
+  const monthFilter = req.query.month;
+  
   db.all(`SELECT * FROM data WHERE user_id = ? ORDER BY created_at DESC`, [req.session.userId], (err, rows) => {
     if (err || !rows) {
       return res.status(500).json({ success: false, message: 'Error exporting data' });
+    }
+
+    // Filter by month if provided
+    if (monthFilter) {
+      rows = rows.filter(row => {
+        const date = new Date(row.tarikh);
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        return month === monthFilter;
+      });
     }
 
     // Transform data
@@ -257,9 +280,20 @@ app.get('/api/export/excel', checkAuth, (req, res) => {
 
 // Export to CSV
 app.get('/api/export/csv', checkAuth, (req, res) => {
+  const monthFilter = req.query.month;
+  
   db.all(`SELECT * FROM data WHERE user_id = ? ORDER BY created_at DESC`, [req.session.userId], (err, rows) => {
     if (err || !rows) {
       return res.status(500).json({ success: false, message: 'Error exporting data' });
+    }
+
+    // Filter by month if provided
+    if (monthFilter) {
+      rows = rows.filter(row => {
+        const date = new Date(row.tarikh);
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        return month === monthFilter;
+      });
     }
 
     let csv = 'Tarikh,Rujukan,Dibayar Kepada,Perkara,Liabiliti,Bayaran,Jumlah Bayaran,Baki\n';

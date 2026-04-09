@@ -17,70 +17,226 @@
       </div>
     </div>
 
-    <div class="dashboard-container">
-      <h1>Dashboard</h1>
+    <div class="dashboard-layout">
+      <!-- Sidebar Menu -->
+      <aside class="sidebar">
+        <nav class="sidebar-menu">
+          <div class="sidebar-title">MENU UTAMA</div>
+          
+          <button class="menu-item" onclick="switchView('inbox')">
+            <span class="menu-icon">📧</span>
+            <span class="menu-text">INBOX</span>
+          </button>
 
-      <!-- Menu Boxes -->
-      <div class="menu-boxes">
-        <div class="menu-box" onclick="goToPage('data-entry')">
-          <h3>➕ Input Data</h3>
-          <p>Add new data entries</p>
-        </div>
-        <div class="menu-box" onclick="goToPage('view-data')">
-          <h3>📊 View Data</h3>
-          <p>View all your stored data</p>
-        </div>
-        <div class="menu-box" onclick="goToPage('statistics')">
-          <h3>📈 Statistics</h3>
-          <p>View data statistics</p>
-        </div>
-        <div id="adminBoxContainer" style="display: none;">
-          <div class="menu-box admin-box" onclick="goToPage('admin')">
-            <h3>👨‍💼 Paparan ADMIN</h3>
-            <p>Manage system administrators</p>
+          <div class="menu-section">
+            <div class="menu-section-title">Buku Vot</div>
+            <button class="menu-item submenu" onclick="switchView('buku-perbekalan')">
+              <span class="menu-icon">📚</span>
+              <span class="menu-text">Perbekalan</span>
+            </button>
+            <button class="menu-item submenu" onclick="switchView('buku-pembangunan')">
+              <span class="menu-icon">🏗️</span>
+              <span class="menu-text">Pembangunan</span>
+            </button>
+          </div>
+
+          <button class="menu-item" onclick="switchView('statistics')">
+            <span class="menu-icon">📈</span>
+            <span class="menu-text">View Statistik</span>
+          </button>
+
+          <button class="menu-item" onclick="switchView('data')">
+            <span class="menu-icon">📊</span>
+            <span class="menu-text">View Data</span>
+          </button>
+
+          <div id="adminMenuContainer" style="display: none;">
+            <button class="menu-item" onclick="switchView('admin')">
+              <span class="menu-icon">👨‍💼</span>
+              <span class="menu-text">Paparan ADMIN</span>
+            </button>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main class="content-area">
+        <!-- INBOX View -->
+        <div id="inboxView" class="view-section" style="display: none;">
+          <h1>INBOX</h1>
+          <div class="inbox-container">
+            <p style="text-align: center; color: #999; padding: 40px;">No messages</p>
           </div>
         </div>
-      </div>
 
-      <!-- Data Section -->
-      <div class="data-section" id="dataSection" style="display: none;">
-        <h2>Your Data</h2>
-        <div style="margin-bottom: 20px;">
-          <button class="export-btn export-pdf" onclick="exportData('pdf')">📄 Export PDF</button>
-          <button class="export-btn export-excel" onclick="exportData('excel')">📊 Export Excel</button>
-          <button class="export-btn export-csv" onclick="exportData('csv')">📋 Export CSV</button>
+        <!-- Buku Vot - Perbekalan -->
+        <div id="bukuPerbekalanView" class="view-section" style="display: none;">
+          <div class="view-header">
+            <h1>Buku Vot - Perbekalan</h1>
+            <div class="view-controls">
+              <select id="monthSelectPerbekalan" onchange="loadBukuVot('perbekalan')" class="month-select">
+                <option value="">Semua Bulan</option>
+                <option value="01">Januari</option>
+                <option value="02">Februari</option>
+                <option value="03">Maret</option>
+                <option value="04">April</option>
+                <option value="05">Mei</option>
+                <option value="06">Juni</option>
+                <option value="07">Juli</option>
+                <option value="08">Agustus</option>
+                <option value="09">September</option>
+                <option value="10">Oktober</option>
+                <option value="11">November</option>
+                <option value="12">Desember</option>
+              </select>
+            </div>
+          </div>
+          <table class="data-table" id="bukuPerbekalanTable">
+            <thead>
+              <tr>
+                <th>Tarikh</th>
+                <th>Rujukan</th>
+                <th>Dibayar Kepada</th>
+                <th>Perkara</th>
+                <th>Bayaran</th>
+                <th>Jumlah Bayaran</th>
+                <th>Baki</th>
+              </tr>
+            </thead>
+            <tbody id="bukuPerbekalanBody"></tbody>
+          </table>
         </div>
-        <table class="data-table" id="dataTable">
-          <thead>
-            <tr>
-              <th>Tarikh</th>
-              <th>Rujukan</th>
-              <th>Dibayar Kepada</th>
-              <th>Perkara</th>
-              <th>Liabiliti</th>
-              <th>Bayaran</th>
-              <th>Jumlah Bayaran</th>
-              <th>Baki</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="dataBody">
-          </tbody>
-        </table>
-        <div class="empty-message" id="emptyMessage" style="display: none;">
-          No data available. <a href="#" onclick="goToPage('data-entry'); return false;">Add some data</a>
-        </div>
-      </div>
 
-      <!-- Statistics Section -->
-      <div class="data-section" id="statisticsSection" style="display: none;">
-        <h2>Statistics</h2>
-        <div style="padding: 20px;">
-          <p>Total Entries: <strong id="totalEntries">0</strong></p>
-          <p>Categories: <strong id="totalCategories">0</strong></p>
-          <p id="categoryBreakdown" style="margin-top: 20px;"></p>
+        <!-- Buku Vot - Pembangunan -->
+        <div id="bukuPembangunanView" class="view-section" style="display: none;">
+          <div class="view-header">
+            <h1>Buku Vot - Pembangunan</h1>
+            <div class="view-controls">
+              <select id="monthSelectPembangunan" onchange="loadBukuVot('pembangunan')" class="month-select">
+                <option value="">Semua Bulan</option>
+                <option value="01">Januari</option>
+                <option value="02">Februari</option>
+                <option value="03">Maret</option>
+                <option value="04">April</option>
+                <option value="05">Mei</option>
+                <option value="06">Juni</option>
+                <option value="07">Juli</option>
+                <option value="08">Agustus</option>
+                <option value="09">September</option>
+                <option value="10">Oktober</option>
+                <option value="11">November</option>
+                <option value="12">Desember</option>
+              </select>
+            </div>
+          </div>
+          <table class="data-table" id="bukuPembangunanTable">
+            <thead>
+              <tr>
+                <th>Tarikh</th>
+                <th>Rujukan</th>
+                <th>Dibayar Kepada</th>
+                <th>Perkara</th>
+                <th>Bayaran</th>
+                <th>Jumlah Bayaran</th>
+                <th>Baki</th>
+              </tr>
+            </thead>
+            <tbody id="bukuPembangunanBody"></tbody>
+          </table>
         </div>
-      </div>
+
+        <!-- View Statistik -->
+        <div id="statisticsView" class="view-section" style="display: none;">
+          <div class="view-header">
+            <h1>Statistik Data</h1>
+            <div class="view-controls">
+              <select id="monthSelectStats" onchange="loadStatistics()" class="month-select">
+                <option value="">Semua Bulan</option>
+                <option value="01">Januari</option>
+                <option value="02">Februari</option>
+                <option value="03">Maret</option>
+                <option value="04">April</option>
+                <option value="05">Mei</option>
+                <option value="06">Juni</option>
+                <option value="07">Juli</option>
+                <option value="08">Agustus</option>
+                <option value="09">September</option>
+                <option value="10">Oktober</option>
+                <option value="11">November</option>
+                <option value="12">Desember</option>
+              </select>
+            </div>
+          </div>
+          <div class="statistics-container">
+            <div class="stat-card">
+              <h3>Total Entries</h3>
+              <p class="stat-value" id="totalEntries">0</p>
+            </div>
+            <div class="stat-card">
+              <h3>Total Bayaran</h3>
+              <p class="stat-value" id="totalBayaran">RM 0.00</p>
+            </div>
+            <div class="stat-card">
+              <h3>Total Jumlah Bayaran</h3>
+              <p class="stat-value" id="totalJumlahBayaran">RM 0.00</p>
+            </div>
+            <div class="stat-card">
+              <h3>Total Baki</h3>
+              <p class="stat-value" id="totalBaki">RM 0.00</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- View Data -->
+        <div id="dataView" class="view-section" style="display: none;">
+          <div class="view-header">
+            <h1>Paparan Data</h1>
+            <div class="view-controls">
+              <select id="monthSelectData" onchange="loadData()" class="month-select">
+                <option value="">Semua Bulan</option>
+                <option value="01">Januari</option>
+                <option value="02">Februari</option>
+                <option value="03">Maret</option>
+                <option value="04">April</option>
+                <option value="05">Mei</option>
+                <option value="06">Juni</option>
+                <option value="07">Juli</option>
+                <option value="08">Agustus</option>
+                <option value="09">September</option>
+                <option value="10">Oktober</option>
+                <option value="11">November</option>
+                <option value="12">Desember</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <button class="export-btn export-pdf" onclick="exportData('pdf')">📄 Export PDF</button>
+            <button class="export-btn export-excel" onclick="exportData('excel')">📊 Export Excel</button>
+            <button class="export-btn export-csv" onclick="exportData('csv')">📋 Export CSV</button>
+            <button class="btn" onclick="window.location.href='/data-entry'" style="display: inline-block; width: auto; padding: 10px 20px;">➕ Tambah Data</button>
+          </div>
+          <table class="data-table" id="dataTable">
+            <thead>
+              <tr>
+                <th>Tarikh</th>
+                <th>Rujukan</th>
+                <th>Dibayar Kepada</th>
+                <th>Perkara</th>
+                <th>Liabiliti</th>
+                <th>Bayaran</th>
+                <th>Jumlah Bayaran</th>
+                <th>Baki</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="dataBody">
+            </tbody>
+          </table>
+          <div class="empty-message" id="emptyMessage" style="display: none;">
+            No data available. <a href="#" onclick="switchView('data'); return false;">Add some data</a>
+          </div>
+        </div>
+      </main>
     </div>
   </div>
 
@@ -110,89 +266,140 @@
   </div>
 
   <script>
-    // Load user info
+    const months = {
+      '01': 'Januari', '02': 'Februari', '03': 'Maret', '04': 'April',
+      '05': 'Mei', '06': 'Juni', '07': 'Juli', '08': 'Agustus',
+      '09': 'September', '10': 'Oktober', '11': 'November', '12': 'Desember'
+    };
+
+    // Load user info and show default view
     async function loadUserInfo() {
       try {
         const response = await fetch('/api/user');
         const data = await response.json();
         document.getElementById('username').textContent = data.username;
         
-        // Show admin box only for admin user
+        // Show admin menu only for admin
         if (data.username === 'admin') {
-          document.getElementById('adminBoxContainer').style.display = 'block';
+          document.getElementById('adminMenuContainer').style.display = 'block';
         }
+        
+        // Show statistics view by default
+        switchView('statistics');
       } catch (error) {
         console.error('Error loading user info:', error);
       }
     }
 
-    // Navigate to different sections
-    function goToPage(page) {
-      if (page === 'data-entry') {
-        window.location.href = '/data-entry';
-      } else if (page === 'view-data') {
-        showDataSection();
-      } else if (page === 'statistics') {
-        showStatistics();
-      } else if (page === 'admin') {
-        window.location.href = '/admin';
+    // Switch between views
+    function switchView(view) {
+      // Hide all views
+      document.querySelectorAll('.view-section').forEach(section => {
+        section.style.display = 'none';
+      });
+
+      // Show selected view
+      switch(view) {
+        case 'inbox':
+          document.getElementById('inboxView').style.display = 'block';
+          break;
+        case 'buku-perbekalan':
+          document.getElementById('bukuPerbekalanView').style.display = 'block';
+          loadBukuVot('perbekalan');
+          break;
+        case 'buku-pembangunan':
+          document.getElementById('bukuPembangunanView').style.display = 'block';
+          loadBukuVot('pembangunan');
+          break;
+        case 'statistics':
+          document.getElementById('statisticsView').style.display = 'block';
+          loadStatistics();
+          break;
+        case 'data':
+          document.getElementById('dataView').style.display = 'block';
+          loadData();
+          break;
+        case 'admin':
+          window.location.href = '/admin';
+          break;
       }
     }
 
-    // Show data section
-    async function showDataSection() {
-      document.getElementById('dataSection').style.display = 'block';
-      document.getElementById('statisticsSection').style.display = 'none';
-      await loadData();
+    // Get selected month
+    function getSelectedMonth(selectId) {
+      const select = document.getElementById(selectId);
+      return select ? select.value : '';
     }
 
-    // Load data from server
-    async function loadData() {
-      try {
-        const response = await fetch('/api/data');
-        const result = await response.json();
-
-        if (result.success && result.data.length > 0) {
-          const tbody = document.getElementById('dataBody');
-          tbody.innerHTML = '';
-          result.data.forEach(item => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-              <td>${item.tarikh || '-'}</td>
-              <td>${item.rujukan || '-'}</td>
-              <td>${item.dibayar_kepada || '-'}</td>
-              <td>${item.perkara || '-'}</td>
-              <td>${item.liabiliti || '-'}</td>
-              <td>${item.bayaran || '-'}</td>
-              <td>${item.jumlah_bayaran || '-'}</td>
-              <td>${item.baki || '-'}</td>
-              <td><button class="delete-btn" onclick="deleteData(${item.id})">Delete</button></td>
-            `;
-            tbody.appendChild(row);
-          });
-          document.getElementById('emptyMessage').style.display = 'none';
-        } else {
-          document.getElementById('emptyMessage').style.display = 'block';
-        }
-      } catch (error) {
-        console.error('Error loading data:', error);
-      }
+    // Filter data by month
+    function filterDataByMonth(data, month) {
+      if (!month) return data;
+      return data.filter(item => {
+        const date = new Date(item.tarikh);
+        const itemMonth = String(date.getMonth() + 1).padStart(2, '0');
+        return itemMonth === month;
+      });
     }
 
-    // Show statistics
-    async function showStatistics() {
-      document.getElementById('dataSection').style.display = 'none';
-      document.getElementById('statisticsSection').style.display = 'block';
-
+    // Load Buku Vot (by category)
+    async function loadBukuVot(category) {
       try {
         const response = await fetch('/api/data');
         const result = await response.json();
 
         if (result.success && result.data) {
-          const data = result.data;
+          const month = category === 'perbekalan' ? 
+            getSelectedMonth('monthSelectPerbekalan') : 
+            getSelectedMonth('monthSelectPembangunan');
+          
+          let filteredData = result.data;
+          if (month) {
+            filteredData = filterDataByMonth(filteredData, month);
+          }
+
+          const bodyId = category === 'perbekalan' ? 'bukuPerbekalanBody' : 'bukuPembangunanBody';
+          const tbody = document.getElementById(bodyId);
+          tbody.innerHTML = '';
+
+          if (filteredData.length > 0) {
+            filteredData.forEach(item => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td>${item.tarikh || '-'}</td>
+                <td>${item.rujukan || '-'}</td>
+                <td>${item.dibayar_kepada || '-'}</td>
+                <td>${item.perkara || '-'}</td>
+                <td>RM ${parseFloat(item.bayaran || 0).toFixed(2)}</td>
+                <td>RM ${parseFloat(item.jumlah_bayaran || 0).toFixed(2)}</td>
+                <td>RM ${parseFloat(item.baki || 0).toFixed(2)}</td>
+              `;
+              tbody.appendChild(row);
+            });
+          } else {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">No data found</td></tr>';
+          }
+        }
+      } catch (error) {
+        console.error('Error loading Buku Vot:', error);
+      }
+    }
+
+    // Load statistics data
+    async function loadStatistics() {
+      try {
+        const response = await fetch('/api/data');
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          const month = getSelectedMonth('monthSelectStats');
+          let data = result.data;
+          
+          if (month) {
+            data = filterDataByMonth(data, month);
+          }
+
           document.getElementById('totalEntries').textContent = data.length;
 
-          // Calculate financial statistics
           let totalBayaran = 0;
           let totalJumlahBayaran = 0;
           let totalBaki = 0;
@@ -203,21 +410,53 @@
             totalBaki += parseFloat(item.baki) || 0;
           });
 
-          document.getElementById('totalCategories').textContent = data.length + ' entries';
-
-          // Show financial breakdown
-          let breakdown = `
-            <strong>Financial Summary:</strong>
-            <ul style="margin-top: 10px;">
-              <li>Total Bayaran: RM ${totalBayaran.toFixed(2)}</li>
-              <li>Total Jumlah Bayaran: RM ${totalJumlahBayaran.toFixed(2)}</li>
-              <li>Total Baki: RM ${totalBaki.toFixed(2)}</li>
-            </ul>
-          `;
-          document.getElementById('categoryBreakdown').innerHTML = breakdown;
+          document.getElementById('totalBayaran').textContent = 'RM ' + totalBayaran.toFixed(2);
+          document.getElementById('totalJumlahBayaran').textContent = 'RM ' + totalJumlahBayaran.toFixed(2);
+          document.getElementById('totalBaki').textContent = 'RM ' + totalBaki.toFixed(2);
         }
       } catch (error) {
         console.error('Error loading statistics:', error);
+      }
+    }
+
+    // Load data
+    async function loadData() {
+      try {
+        const response = await fetch('/api/data');
+        const result = await response.json();
+
+        if (result.success && result.data.length > 0) {
+          const month = getSelectedMonth('monthSelectData');
+          let data = result.data;
+          
+          if (month) {
+            data = filterDataByMonth(data, month);
+          }
+
+          const tbody = document.getElementById('dataBody');
+          tbody.innerHTML = '';
+          
+          data.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${item.tarikh || '-'}</td>
+              <td>${item.rujukan || '-'}</td>
+              <td>${item.dibayar_kepada || '-'}</td>
+              <td>${item.perkara || '-'}</td>
+              <td>${item.liabiliti || '-'}</td>
+              <td>RM ${parseFloat(item.bayaran || 0).toFixed(2)}</td>
+              <td>RM ${parseFloat(item.jumlah_bayaran || 0).toFixed(2)}</td>
+              <td>RM ${parseFloat(item.baki || 0).toFixed(2)}</td>
+              <td><button class="delete-btn" onclick="deleteData(${item.id})">Delete</button></td>
+            `;
+            tbody.appendChild(row);
+          });
+          document.getElementById('emptyMessage').style.display = 'none';
+        } else {
+          document.getElementById('emptyMessage').style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
       }
     }
 
@@ -232,7 +471,7 @@
         const result = await response.json();
 
         if (result.success) {
-          await loadData();
+          loadData();
         } else {
           alert('Error deleting data: ' + result.message);
         }
@@ -259,30 +498,27 @@
 
     // Export data
     function exportData(format) {
+      const month = getSelectedMonth('monthSelectData');
       if (format === 'pdf') {
-        window.location.href = '/api/export/pdf';
+        window.location.href = '/api/export/pdf' + (month ? '?month=' + month : '');
       } else if (format === 'excel') {
-        window.location.href = '/api/export/excel';
+        window.location.href = '/api/export/excel' + (month ? '?month=' + month : '');
       } else if (format === 'csv') {
-        window.location.href = '/api/export/csv';
+        window.location.href = '/api/export/csv' + (month ? '?month=' + month : '');
       }
     }
 
-    // Open change password modal
+    // Change password modal functions
     function openChangePasswordModal() {
       document.getElementById('changePasswordModal').style.display = 'block';
       document.getElementById('changePasswordForm').reset();
       document.getElementById('passwordMessage').textContent = '';
     }
 
-    // Close change password modal
     function closeChangePasswordModal() {
       document.getElementById('changePasswordModal').style.display = 'none';
-      document.getElementById('changePasswordForm').reset();
-      document.getElementById('passwordMessage').textContent = '';
     }
 
-    // Handle change password form submission
     document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -324,7 +560,6 @@
           messageDiv.className = 'message success';
           messageDiv.style.display = 'block';
 
-          // Close modal after 2 seconds
           setTimeout(() => {
             closeChangePasswordModal();
           }, 2000);
@@ -340,7 +575,6 @@
       }
     });
 
-    // Close modal when clicking outside of it
     window.onclick = function(event) {
       const modal = document.getElementById('changePasswordModal');
       if (event.target === modal) {
@@ -348,7 +582,7 @@
       }
     };
 
-    // Load user info on page load
+    // Initialize
     loadUserInfo();
   </script>
 </body>
