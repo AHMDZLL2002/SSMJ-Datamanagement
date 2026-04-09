@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - Data Storage</title>
   <link rel="stylesheet" href="style.css">
+  <script src="i18n.js"></script>
 </head>
 <body>
   <div class="dashboard">
@@ -13,6 +14,20 @@
       <div class="user-info">
         <span>Welcome, <strong id="username">User</strong></span>
         <button class="change-password-btn" onclick="openChangePasswordModal()">🔐 Change Password</button>
+        
+        <!-- Language Selector -->
+        <div class="language-selector">
+          <button class="language-btn" id="languageBtn">🌐 Language</button>
+          <div class="language-dropdown" id="languageDropdown">
+            <button class="lang-option" onclick="setLanguage('en-US')">🇺🇸 English (US)</button>
+            <button class="lang-option" onclick="setLanguage('ms-MY')">🇲🇾 Bahasa Malaysia</button>
+            <button class="lang-option" onclick="setLanguage('id-ID')">🇮🇩 Bahasa Indonesia</button>
+            <button class="lang-option" onclick="setLanguage('th-TH')">🇹🇭 ภาษาไทย</button>
+            <button class="lang-option" onclick="setLanguage('vi-VN')">🇻🇳 Tiếng Việt</button>
+            <button class="lang-option" onclick="setLanguage('fil-PH')">🇵🇭 Filipino</button>
+          </div>
+        </div>
+        
         <button class="logout-btn" onclick="logout()">Logout</button>
       </div>
     </div>
@@ -271,6 +286,36 @@
       '05': 'Mei', '06': 'Juni', '07': 'Juli', '08': 'Agustus',
       '09': 'September', '10': 'Oktober', '11': 'November', '12': 'Desember'
     };
+
+    // Update all month selects based on current language
+    function updateMonthSelects() {
+      const monthIds = ['monthSelectPerbekalan', 'monthSelectPembangunan', 'monthSelectStats', 'monthSelectData'];
+      const monthCodes = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+      const monthKeys = ['januari', 'februari', 'maret', 'april', 'mei', 'juni', 'juli', 'agustus', 'september', 'oktober', 'november', 'desember'];
+      
+      monthIds.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        
+        // Store current value
+        const currentValue = select.value;
+        
+        // Clear and recreate options
+        select.innerHTML = `<option value="">${t('allMonths')}</option>`;
+        
+        // Add month options with translated names
+        monthCodes.forEach((code, index) => {
+          const monthName = t(monthKeys[index]);
+          const option = document.createElement('option');
+          option.value = code;
+          option.textContent = monthName;
+          select.appendChild(option);
+        });
+        
+        // Restore previous value if available
+        select.value = currentValue;
+      });
+    }
 
     // Load user info and show default view
     async function loadUserInfo() {
@@ -582,7 +627,22 @@
       }
     };
 
+    // Language dropdown toggle
+    document.getElementById('languageBtn').addEventListener('click', function() {
+      const dropdown = document.getElementById('languageDropdown');
+      dropdown.classList.toggle('show');
+    });
+
+    // Close language dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      const selector = document.querySelector('.language-selector');
+      if (!selector.contains(event.target)) {
+        document.getElementById('languageDropdown').classList.remove('show');
+      }
+    });
+
     // Initialize
+    updateMonthSelects();
     loadUserInfo();
   </script>
 </body>

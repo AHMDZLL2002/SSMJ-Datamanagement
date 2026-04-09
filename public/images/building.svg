@@ -1,0 +1,142 @@
+<svg viewBox="0 0 1000 800" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sky gradient background -->
+  <defs>
+    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#87CEEB;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E0F6FF;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="buildingGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#B8860B;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#DAA520;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#B8860B;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Sky -->
+  <rect width="1000" height="800" fill="url(#skyGradient)"/>
+  
+  <!-- Main tall building -->
+  <rect x="250" y="150" width="500" height="600" fill="url(#buildingGradient)" stroke="#8B7500" stroke-width="2"/>
+  
+  <!-- Windows pattern on main building -->
+  <g fill="#4A90E2" opacity="0.7">
+    <!-- Row 1 -->
+    <rect x="280" y="180" width="30" height="30"/>
+    <rect x="330" y="180" width="30" height="30"/>
+    <rect x="380" y="180" width="30" height="30"/>
+    <rect x="430" y="180" width="30" height="30"/>
+    <rect x="480" y="180" width="30" height="30"/>
+    <rect x="530" y="180" width="30" height="30"/>
+    <rect x="580" y="180" width="30" height="30"/>
+    <rect x="630" y="180" width="30" height="30"/>
+    <rect x="680" y="180" width="30" height="30"/>
+    
+    <!-- Row 2 -->
+    <rect x="280" y="240" width="30" height="30"/>
+    <rect x="330" y="240" width="30" height="30"/>
+    <rect x="380" y="240" width="30" height="30"/>
+    <rect x="430" y="240" width="30" height="30"/>
+    <rect x="480" y="240" width="30" height="30"/>
+    <rect x="530" y="240" width="30" height="30"/>
+    <rect x="580" y="240" width="30" height="30"/>
+    <rect x="630" y="240" width="30" height="30"/>
+    <rect x="680" y="240" width="30" height="30"/>
+    
+    <!-- Row 3 -->
+    <rect x="280" y="300" width="30" height="30"/>
+    <rect x="330" y="300" width="30" height="30"/>
+    <rect x="380" y="300" width="30" height="30"/>
+    <rect x="430" y="300" width="30" height="30"/>
+    <rect x="480" y="300" width="30" height="30"/>
+    <rect x="530" y="300" width="30" height="30"/>
+    <rect x="580" y="300" width="30" height="30"/>
+    <rect x="630" y="300" width="30" height="30"/>
+    <rect x="680" y="300" width="30" height="30"/>
+    
+    <!-- Row 4 -->
+    <rect x="280" y="360" width="30" height="30"/>
+    <rect x="330" y="360" width="30" height="30"/>
+    <rect x="380" y="360" width="30" height="30"/>
+    <rect x="430" y="360" width="30" height="30"/>
+    <rect x="480" y="360" width="30" height="30"/>
+    <rect x="530" y="360" width="30" height="30"/>
+    <rect x="580" y="360" width="30" height="30"/>
+    <rect x="630" y="360" width="30" height="30"/>
+    <rect x="680" y="360" width="30" height="30"/>
+    
+    <!-- Row 5 -->
+    <rect x="280" y="420" width="30" height="30"/>
+    <rect x="330" y="420" width="30" height="30"/>
+    <rect x="380" y="420" width="30" height="30"/>
+    <rect x="430" y="420" width="30" height="30"/>
+    <rect x="480" y="420" width="30" height="30"/>
+    <rect x="530" y="420" width="30" height="30"/>
+    <rect x="580" y="420" width="30" height="30"/>
+    <rect x="630" y="420" width="30" height="30"/>
+    <rect x="680" y="420" width="30" height="30"/>
+    
+    <!-- Row 6 -->
+    <rect x="280" y="480" width="30" height="30"/>
+    <rect x="330" y="480" width="30" height="30"/>
+    <rect x="380" y="480" width="30" height="30"/>
+    <rect x="430" y="480" width="30" height="30"/>
+    <rect x="480" y="480" width="30" height="30"/>
+    <rect x="530" y="480" width="30" height="30"/>
+    <rect x="580" y="480" width="30" height="30"/>
+    <rect x="630" y="480" width="30" height="30"/>
+    <rect x="680" y="480" width="30" height="30"/>
+  </g>
+  
+  <!-- Dome/Crown on top -->
+  <ellipse cx="500" cy="150" rx="60" ry="40" fill="#B8860B" stroke="#8B7500" stroke-width="2"/>
+  <path d="M 500 110 L 510 100 Q 520 95 530 100 L 525 110 Z" fill="#DAA520"/>
+  
+  <!-- Side buildings -->
+  <rect x="100" y="300" width="120" height="450" fill="#CD853F" stroke="#8B7500" stroke-width="2"/>
+  <rect x="780" y="300" width="120" height="450" fill="#CD853F" stroke="#8B7500" stroke-width="2"/>
+  
+  <!-- Windows for side buildings -->
+  <g fill="#4A90E2" opacity="0.7">
+    <rect x="120" y="330" width="20" height="20"/>
+    <rect x="155" y="330" width="20" height="20"/>
+    <rect x="120" y="380" width="20" height="20"/>
+    <rect x="155" y="380" width="20" height="20"/>
+    <rect x="120" y="430" width="20" height="20"/>
+    <rect x="155" y="430" width="20" height="20"/>
+    <rect x="120" y="480" width="20" height="20"/>
+    <rect x="155" y="480" width="20" height="20"/>
+    <rect x="120" y="530" width="20" height="20"/>
+    <rect x="155" y="530" width="20" height="20"/>
+    <rect x="120" y="580" width="20" height="20"/>
+    <rect x="155" y="580" width="20" height="20"/>
+    <rect x="120" y="630" width="20" height="20"/>
+    <rect x="155" y="630" width="20" height="20"/>
+    
+    <!-- Right side -->
+    <rect x="800" y="330" width="20" height="20"/>
+    <rect x="835" y="330" width="20" height="20"/>
+    <rect x="800" y="380" width="20" height="20"/>
+    <rect x="835" y="380" width="20" height="20"/>
+    <rect x="800" y="430" width="20" height="20"/>
+    <rect x="835" y="430" width="20" height="20"/>
+    <rect x="800" y="480" width="20" height="20"/>
+    <rect x="835" y="480" width="20" height="20"/>
+    <rect x="800" y="530" width="20" height="20"/>
+    <rect x="835" y="530" width="20" height="20"/>
+    <rect x="800" y="580" width="20" height="20"/>
+    <rect x="835" y="580" width="20" height="20"/>
+    <rect x="800" y="630" width="20" height="20"/>
+    <rect x="835" y="630" width="20" height="20"/>
+  </g>
+  
+  <!-- Ground -->
+  <rect x="0" y="750" width="1000" height="50" fill="#228B22"/>
+  
+  <!-- Landscape trees -->
+  <g fill="#228B22">
+    <circle cx="50" cy="730" r="20"/>
+    <circle cx="100" cy="740" r="15"/>
+    <circle cx="900" cy="735" r="18"/>
+    <circle cx="950" cy="745" r="14"/>
+  </g>
+</svg>

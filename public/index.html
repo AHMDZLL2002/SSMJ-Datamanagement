@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Data Storage - Login</title>
   <link rel="stylesheet" href="style.css">
+  <script src="i18n.js"></script>
 </head>
 <body>
   <!-- Login Header -->
@@ -16,6 +17,18 @@
       <div class="header-text">
         <h1 class="institution-name">Data Management System</h1>
         <p class="institution-subtitle">Sistem Pengurusan Data</p>
+      </div>
+    </div>
+    <!-- Language Selector for Login -->
+    <div class="language-selector" style="position: absolute; top: 10px; right: 10px;">
+      <button class="language-btn" id="languageBtn">🌐 Language</button>
+      <div class="language-dropdown" id="languageDropdown">
+        <button class="lang-option" onclick="setLanguage('en-US')">🇺🇸 English (US)</button>
+        <button class="lang-option" onclick="setLanguage('ms-MY')">🇲🇾 Bahasa Malaysia</button>
+        <button class="lang-option" onclick="setLanguage('id-ID')">🇮🇩 Bahasa Indonesia</button>
+        <button class="lang-option" onclick="setLanguage('th-TH')">🇹🇭 ภาษาไทย</button>
+        <button class="lang-option" onclick="setLanguage('vi-VN')">🇻🇳 Tiếng Việt</button>
+        <button class="lang-option" onclick="setLanguage('fil-PH')">🇵🇭 Filipino</button>
       </div>
     </div>
   </div>
@@ -47,7 +60,7 @@
           Hakcipta Terpelihara 2026 © Sekretariat Sabah Maju Jaya, Jabatan Ketua Menteri
         </p>
         <p class="developer-text">
-          Dibangunkan oleh AHMAD ZUL IBRAHIM
+          Dibangunkan oleh AHMAD ZUL IBRAHIM BIN ABDUL MUJI @Profiler SMJ
         </p>
       </div>
     </div>
@@ -87,6 +100,20 @@
         messageDiv.textContent = 'An error occurred. Please try again.';
         messageDiv.className = 'message error';
         messageDiv.style.display = 'block';
+      }
+    });
+
+    // Language dropdown toggle
+    document.getElementById('languageBtn').addEventListener('click', function() {
+      const dropdown = document.getElementById('languageDropdown');
+      dropdown.classList.toggle('show');
+    });
+
+    // Close language dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      const selector = document.querySelector('.language-selector');
+      if (!selector.contains(event.target)) {
+        document.getElementById('languageDropdown').classList.remove('show');
       }
     });
   </script>
