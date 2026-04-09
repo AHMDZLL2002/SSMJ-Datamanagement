@@ -85,21 +85,27 @@
         <div id="inboxView" class="view-section" style="display: none;">
           <h1>📨 INBOX - Notis dan Pengumuman</h1>
           <div class="inbox-container">
-            <table class="data-table" id="inboxTable">
-              <thead>
-                <tr>
-                  <th>Tajuk</th>
-                  <th>Kategori</th>
-                  <th>Daripada</th>
-                  <th>Tarikh</th>
-                </tr>
-              </thead>
-              <tbody id="inboxBody">
-                <tr>
-                  <td colspan="4" style="text-align: center; padding: 20px;">Memuatkan...</td>
-                </tr>
-              </tbody>
-            </table>
+            <!-- Table will be shown only when there are notices -->
+            <div id="inboxTableContainer" style="display: none;">
+              <table class="data-table" id="inboxTable">
+                <thead>
+                  <tr>
+                    <th>Tajuk</th>
+                    <th>Kategori</th>
+                    <th>Daripada</th>
+                    <th>Tarikh</th>
+                  </tr>
+                </thead>
+                <tbody id="inboxBody">
+                </tbody>
+              </table>
+            </div>
+            <!-- Message when no notices -->
+            <div id="inboxEmptyMessage" class="empty-notice-message">
+              <div class="empty-notice-icon">📭</div>
+              <h3>Tiada Notis Pada Masa Ini</h3>
+              <p>Admin belum menghantar sebarang notis atau pengumuman.</p>
+            </div>
           </div>
         </div>
 
@@ -568,8 +574,14 @@
 
     // Load notices for INBOX with loading indicator
     async function loadNotices() {
+      const tableContainer = document.getElementById('inboxTableContainer');
+      const emptyMessage = document.getElementById('inboxEmptyMessage');
       const tbody = document.getElementById('inboxBody');
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;"><div class="loading-spinner"></div> Memuatkan notis...</td></tr>';
+
+      // Show loading in empty message area
+      tableContainer.style.display = 'none';
+      emptyMessage.innerHTML = '<div class="loading-spinner"></div> <span>Memuatkan notis...</span>';
+      emptyMessage.style.display = 'block';
 
       console.log('Loading notices for INBOX');
 
@@ -590,7 +602,8 @@
         const result = await response.json();
         console.log('API response:', result);
 
-        if (result.success && result.notices.length > 0) {
+        if (result.success && result.notices && result.notices.length > 0) {
+          // Show table with notices
           tbody.innerHTML = '';
           result.notices.forEach(notice => {
             const row = document.createElement('tr');
@@ -603,16 +616,29 @@
             `;
             tbody.appendChild(row);
           });
+
+          // Show table, hide empty message
+          tableContainer.style.display = 'block';
+          emptyMessage.style.display = 'none';
         } else {
-          tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">Tiada notis pada masa ini</td></tr>';
+          // Show empty message, hide table
+          tableContainer.style.display = 'none';
+          emptyMessage.innerHTML = `
+            <div class="empty-notice-icon">📭</div>
+            <h3>Tiada Notis Pada Masa Ini</h3>
+            <p>Admin belum menghantar sebarang notis atau pengumuman.</p>
+          `;
+          emptyMessage.style.display = 'block';
         }
       } catch (error) {
         console.error('Error loading notices:', error);
         if (error.name === 'AbortError') {
-          tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #f44336;">⏱️ Masa tamat - Sila cuba lagi</td></tr>';
+          emptyMessage.innerHTML = '<div class="empty-notice-icon">⏱️</div><h3>Masa Tamat</h3><p>Sila cuba lagi</p>';
         } else {
-          tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #f44336;">❌ Ralat memuatkan notis</td></tr>';
+          emptyMessage.innerHTML = '<div class="empty-notice-icon">❌</div><h3>Ralat Memuatkan Notis</h3><p>Sila cuba lagi</p>';
         }
+        tableContainer.style.display = 'none';
+        emptyMessage.style.display = 'block';
       }
     }
 
