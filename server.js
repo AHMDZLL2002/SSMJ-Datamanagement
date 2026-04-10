@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const SQLiteStore = require('connect-sqlite3')(session);
 const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
@@ -9,16 +10,27 @@ const db = require('./database');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust Render's reverse proxy so secure cookies work over HTTPS
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Session configuration
+// Sessions stored in SQLite so they survive server restarts
+const SESSION_DB_DIR = process.env.DB_PATH
+  ? path.dirname(process.env.DB_PATH)
+  : __dirname;
+
 app.use(session({
+  store: new SQLiteStore({ db: 'sessions.db', dir: SESSION_DB_DIR }),
   secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false } // Set to true if using HTTPS
+  cookie: {
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days — survives browser close
+  }
 }));
 
 // Serve static files
@@ -1228,5 +1240,10 @@ app.get('/api/penyata/excel', requireAuth, async (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
+  const dbPath = process.env.DB_PATH || path.join(__dirname, 'app.db');
+  const isPersistent = dbPath.startsWith('/var/data');
   console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Database path: ${dbPath}`);
+  console.log(`Session store: ${path.join(SESSION_DB_DIR, 'sessions.db')}`);
+  console.log(`Persistent storage: ${isPersistent ? 'YES (/var/data disk mounted)' : 'NO (local - data will be lost on restart)'}`);
 });
