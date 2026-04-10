@@ -12,8 +12,9 @@
   <div class="dashboard">
     <div class="navbar">
       <div class="logo-container">
+        <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" title="Tunjuk/Sorok Menu">☰</button>
         <img src="images/logo-main.png" alt="LOGO" class="navbar-logo">
-        <span class="navbar-title">SSMJ Administration & Finance Data</span>
+        <span class="navbar-title">SSMJ Data Management</span>
       </div>
       <div id="apiDebug" style="margin-left:20px; color:#b00; font-weight:600;"></div>
       <div class="user-info">
@@ -41,6 +42,8 @@
     </div>
 
     <div class="dashboard-layout" id="dashboardLayout">
+      <!-- Sidebar Backdrop (mobile overlay) -->
+      <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
       <!-- Sidebar Menu -->
       <aside class="sidebar" id="sidebar">
         <nav class="sidebar-menu">
@@ -1826,17 +1829,18 @@
 
     // ── Sidebar toggle ──────────────────────────────────────────
     function toggleSidebar() {
-      const layout = document.getElementById('dashboardLayout');
-      const btn    = document.getElementById('sidebarToggle');
+      const layout   = document.getElementById('dashboardLayout');
+      const btn      = document.getElementById('sidebarToggle');
+      const hamburger = document.getElementById('hamburgerBtn');
       const isMobile = window.innerWidth <= 768;
 
       layout.classList.toggle('sidebar-collapsed');
       const collapsed = layout.classList.contains('sidebar-collapsed');
 
       if (isMobile) {
-        btn.querySelector('.toggle-arrow').textContent = collapsed ? '▼' : '▲';
+        if (hamburger) hamburger.textContent = collapsed ? '\u2630' : '\u2715';
       } else {
-        btn.querySelector('.toggle-arrow').textContent = collapsed ? '▶' : '◀';
+        btn.querySelector('.toggle-arrow').textContent = collapsed ? '\u25b6' : '\u25c4';
       }
 
       // Persist state
@@ -1845,29 +1849,41 @@
 
     // Restore sidebar state on load
     (function() {
-      const saved = localStorage.getItem('sidebarCollapsed');
+      const saved    = localStorage.getItem('sidebarCollapsed');
       const isMobile = window.innerWidth <= 768;
-      const layout = document.getElementById('dashboardLayout');
-      const btn = document.getElementById('sidebarToggle');
+      const layout   = document.getElementById('dashboardLayout');
+      const btn      = document.getElementById('sidebarToggle');
+      const hamburger = document.getElementById('hamburgerBtn');
 
       // Default: collapsed on mobile, open on desktop
       const shouldCollapse = saved !== null ? saved === '1' : isMobile;
 
       if (shouldCollapse) {
         layout.classList.add('sidebar-collapsed');
-        btn.querySelector('.toggle-arrow').textContent = isMobile ? '▼' : '▶';
+        btn.querySelector('.toggle-arrow').textContent = '\u25b6';
+        if (hamburger) hamburger.textContent = '\u2630';
       } else {
-        btn.querySelector('.toggle-arrow').textContent = isMobile ? '▲' : '◀';
+        btn.querySelector('.toggle-arrow').textContent = '\u25c4';
+        if (hamburger) hamburger.textContent = isMobile ? '\u2715' : '\u2630';
       }
     })();
 
-    // Update arrow icon on resize
+    // Update icon on resize; auto-close sidebar when switching to mobile
+    let _prevMobile = window.innerWidth <= 768;
     window.addEventListener('resize', function() {
-      const collapsed = document.getElementById('dashboardLayout').classList.contains('sidebar-collapsed');
-      const isMobile = window.innerWidth <= 768;
-      document.querySelector('.toggle-arrow').textContent = collapsed
-        ? (isMobile ? '▼' : '▶')
-        : (isMobile ? '▲' : '◀');
+      const isMobile  = window.innerWidth <= 768;
+      const layout    = document.getElementById('dashboardLayout');
+      const hamburger = document.getElementById('hamburgerBtn');
+
+      // Auto-close when crossing desktop → mobile threshold
+      if (isMobile && !_prevMobile && !layout.classList.contains('sidebar-collapsed')) {
+        layout.classList.add('sidebar-collapsed');
+      }
+      _prevMobile = isMobile;
+
+      const collapsed = layout.classList.contains('sidebar-collapsed');
+      document.querySelector('.toggle-arrow').textContent = collapsed ? '\u25b6' : '\u25c4';
+      if (hamburger) hamburger.textContent = collapsed ? '\u2630' : (isMobile ? '\u2715' : '\u2630');
     });
     // ────────────────────────────────────────────────────────────
 
