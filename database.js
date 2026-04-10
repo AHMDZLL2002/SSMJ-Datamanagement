@@ -56,6 +56,45 @@ db.serialize(() => {
     )
   `);
 
+  // Kepala VOT list table - stores available Kepala VOT options managed by admin
+  db.run(`
+    CREATE TABLE IF NOT EXISTS kepala_vot_list (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      kod TEXT UNIQUE NOT NULL,
+      keterangan TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Category budgets table - stores peruntukan (allocation) per Buku Vot category
+  db.run(`
+    CREATE TABLE IF NOT EXISTS category_budgets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      category TEXT UNIQUE NOT NULL,
+      peruntukan REAL DEFAULT 0,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, () => {
+    // Insert default rows for all 6 categories
+    const cats = ['perbekalan', 'pembangunan', 'gaji', 'operasi', 'penyelenggaraan', 'utiliti'];
+    cats.forEach(cat => {
+      db.run(`INSERT OR IGNORE INTO category_budgets (category, peruntukan) VALUES (?, 0)`, [cat]);
+    });
+  });
+
+  // Migration: Add kepala_vot column to data table if it doesn't exist
+  db.all("PRAGMA table_info(data)", (err, columns) => {
+    if (columns) {
+      const hasKepalaVot = columns.some(col => col.name === 'kepala_vot');
+      if (!hasKepalaVot) {
+        db.run(`ALTER TABLE data ADD COLUMN kepala_vot TEXT`, (err) => {
+          if (err) console.error('Error adding kepala_vot column:', err);
+          else console.log('Added kepala_vot column to data table');
+        });
+      }
+    }
+  });
+
   // Migration: Add image columns if they don't exist
   db.all("PRAGMA table_info(notices)", (err, columns) => {
     if (columns) {

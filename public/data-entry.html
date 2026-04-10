@@ -1,222 +1,396 @@
-<!DOCTYPE html>
-<html lang="en">
+﻿<!DOCTYPE html>
+<html lang="ms">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Data Entry - Data Storage</title>
+  <title>Daftar Bill</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    body { background-attachment: fixed; }
+
+    /* Shell: full viewport, no scroll */
+    .de-shell {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    /* Topbar */
+    .de-topbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px;
+      height: 46px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      color: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    }
+    .de-topbar a {
+      color: rgba(255,255,255,.85);
+      text-decoration: none;
+      font-size: 12px;
+      padding: 3px 9px;
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 4px;
+      white-space: nowrap;
+      transition: background .2s;
+    }
+    .de-topbar a:hover { background: rgba(255,255,255,.18); }
+    .de-topbar-title { font-size: 15px; font-weight: 700; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .de-cat-badge { background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.4); border-radius: 20px; padding: 2px 10px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+    .de-user { font-size: 12px; opacity: .85; white-space: nowrap; }
+    .de-logout { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); color: white; padding: 3px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background .2s; }
+    .de-logout:hover { background: rgba(255,255,255,.28); }
+
+    /* Body: centres the card, no scroll */
+    .de-body {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      padding: 10px 16px 8px;
+    }
+
+    /* Card */
+    .de-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.12);
+      padding: 12px 16px 10px;
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Section stripe label */
+    .de-sec {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      color: #667eea;
+      margin-bottom: 6px;
+    }
+    .de-sec::after { content: ''; flex: 1; height: 1px; background: #e4e8ff; }
+
+    /* Grids */
+    .de-grid {
+      display: grid;
+      gap: 6px 12px;
+      margin-bottom: 8px;
+    }
+    .g4 { grid-template-columns: repeat(4, 1fr); }
+    .g3 { grid-template-columns: repeat(3, 1fr); }
+
+    /* Field */
+    .de-field { display: flex; flex-direction: column; gap: 2px; }
+    .de-field label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: .35px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .de-field label .req { color: #e03e3e; }
+    .de-field input,
+    .de-field select,
+    .de-field textarea {
+      border: 1.5px solid #e2e2e2;
+      border-radius: 5px;
+      padding: 5px 8px;
+      font-size: 13px;
+      color: #333;
+      outline: none;
+      background: #fafafa;
+      width: 100%;
+      box-sizing: border-box;
+      font-family: inherit;
+      transition: border-color .18s, box-shadow .18s;
+    }
+    .de-field input:focus,
+    .de-field select:focus,
+    .de-field textarea:focus {
+      border-color: #667eea;
+      background: #fff;
+      box-shadow: 0 0 0 2px rgba(102,126,234,.13);
+    }
+    .de-field textarea { resize: none; min-height: 50px; }
+    .de-field input[readonly] { background: #f0f4ff; color: #4a5eaa; font-weight: 600; cursor: default; }
+
+    /* Thin divider between sections */
+    .de-hr { border: none; border-top: 1px solid #f0f0f0; margin: 6px 0; }
+
+    /* Budget info panel */
+    .de-baki-panel {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 20px;
+      background: #f0f4ff;
+      border: 1px solid #d0d8ff;
+      border-radius: 7px;
+      padding: 8px 14px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: #555;
+      align-items: center;
+    }
+    .de-baki-panel strong { color: #333; }
+    .de-baki-panel .baki-ok { color: #27ae60; font-weight: 700; }
+    .de-baki-panel .baki-over { color: #e74c3c; font-weight: 700; }
+
+    /* Actions */
+    .de-actions { display: flex; gap: 8px; margin-top: 6px; flex-shrink: 0; }
+    .de-btn-save {
+      flex: 1;
+      padding: 9px 12px;
+      background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      color: white; border: none; border-radius: 6px;
+      font-size: 13.5px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: opacity .2s, transform .15s;
+    }
+    .de-btn-save:hover { opacity: .9; transform: translateY(-1px); }
+    .de-btn-save:active { transform: translateY(0); }
+    .de-btn-save:disabled { opacity: .6; cursor: default; transform: none; }
+    .de-btn-reset {
+      padding: 9px 16px;
+      background: #f5f5f5; color: #555;
+      border: 1.5px solid #ddd; border-radius: 6px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: background .2s;
+    }
+    .de-btn-reset:hover { background: #eaeaea; }
+
+    /* Toast */
+    .de-toast {
+      position: fixed; bottom: 22px; left: 50%;
+      transform: translateX(-50%) translateY(70px);
+      background: #2ecc71; color: white;
+      padding: 10px 24px; border-radius: 40px;
+      font-size: 13.5px; font-weight: 600;
+      box-shadow: 0 5px 18px rgba(0,0,0,.2);
+      transition: transform .35s cubic-bezier(.34,1.56,.64,1), opacity .35s;
+      opacity: 0; z-index: 999; white-space: nowrap;
+      pointer-events: none;
+    }
+    .de-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .de-toast.error { background: #e74c3c; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .de-body { padding: 8px 10px 6px; }
+      .de-card { padding: 10px 12px 8px; }
+      .g4 { grid-template-columns: 1fr 1fr; }
+      .g3 { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .de-body { overflow-y: auto; }
+      .de-card { padding: 10px 10px 8px; }
+      .g4 { grid-template-columns: 1fr 1fr; }
+      .g3 { grid-template-columns: 1fr; }
+      .de-topbar-title { display: none; }
+    }
+  </style>
 </head>
 <body>
-  <div class="dashboard">
-    <div class="navbar">
-      <h2>Data Entry</h2>
-      <div class="user-info">
-        <span>Welcome, <strong id="username">User</strong></span>
-        <button class="logout-btn" onclick="logout()">Logout</button>
-      </div>
+  <div class="de-shell">
+
+    <!-- Topbar -->
+    <div class="de-topbar">
+      <a href="/dashboard">&larr; Dashboard</a>
+      <span class="de-topbar-title">&#128203; Daftar Bill</span>
+      <span class="de-cat-badge" id="catBadge">&mdash;</span>
+      <span class="de-user">&#128100; <strong id="username">&mdash;</strong></span>
+      <button class="de-logout" onclick="logout()">Logout</button>
     </div>
 
-    <a href="/dashboard" class="back-link">← Back to Dashboard</a>
+    <!-- Form Area -->
+    <div class="de-body">
+      <div class="de-card">
 
-    <div class="data-entry-container">
-      <div class="data-entry-header">
-        <h1>📝 Masukkan Data Baru</h1>
-        <p class="data-entry-subtitle">Isi maklumat transaksi dengan lengkap dan tepat</p>
-      </div>
+        <form id="dataForm" autocomplete="off" style="display:flex;flex-direction:column;flex:1;">
 
-      <form id="dataForm" class="data-entry-form">
-        <!-- Transaction Details -->
-        <div class="form-section">
-          <h3>📋 Maklumat Transaksi</h3>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="tarikh">📅 Tarikh (Date) *</label>
+          <!-- Maklumat Transaksi -->
+          <div class="de-sec">&#128203; Maklumat Transaksi</div>
+
+          <!-- Row A: Tarikh | Rujukan | Dibayar Kepada | Kepala VOT -->
+          <div class="de-grid g4">
+            <div class="de-field">
+              <label>&#128197; Tarikh <span class="req">*</span></label>
               <input type="date" id="tarikh" name="tarikh" required>
             </div>
-            <div class="form-group">
-              <label for="rujukan">🔢 Rujukan (Reference)</label>
-              <input type="text" id="rujukan" name="rujukan" placeholder="e.g. INV-2024-001">
+            <div class="de-field">
+              <label>&#128290; Rujukan</label>
+              <input type="text" id="rujukan" name="rujukan" placeholder="INV-2026-001">
+            </div>
+            <div class="de-field">
+              <label>&#128100; Dibayar Kepada</label>
+              <input type="text" id="dibayar_kepada" name="dibayar_kepada" placeholder="Nama penerima">
+            </div>
+            <div class="de-field">
+              <label>&#128278; Kepala VOT</label>
+              <input type="text" id="kepala_vot" name="kepala_vot" placeholder="No. peruntukan VOT">
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="dibayar_kepada">👤 Dibayar Kepada (Paid To)</label>
-            <input type="text" id="dibayar_kepada" name="dibayar_kepada" placeholder="Nama penerima">
-          </div>
-
-          <div class="form-group">
-            <label for="perkara">📝 Perkara (Subject/Matter) *</label>
-            <textarea id="perkara" name="perkara" required placeholder="Penerangan transaksi" rows="3"></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="image">🖼️ Gambar (Image)</label>
-            <input type="file" id="image" name="image" accept="image/*">
-          </div>
-
-          <div class="form-group">
-            <label for="liabiliti">⚖️ Liabiliti (Liability)</label>
-            <input type="text" id="liabiliti" name="liabiliti" placeholder="Butiran liabiliti">
-          </div>
-        </div>
-
-        <!-- Financial Information -->
-        <div class="form-section">
-          <h3>💰 Maklumat Kewangan</h3>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="bayaran">💵 Bayaran (Payment)</label>
-              <input type="number" id="bayaran" name="bayaran" step="0.01" min="0" placeholder="0.00">
-            </div>
-            <div class="form-group">
-              <label for="jumlah_bayaran">🧮 Jumlah Bayaran (Total Payment)</label>
-              <input type="number" id="jumlah_bayaran" name="jumlah_bayaran" step="0.01" min="0" placeholder="0.00">
-            </div>
-            <div class="form-group">
-              <label for="baki">⚖️ Baki (Balance)</label>
-              <input type="number" id="baki" name="baki" step="0.01" min="0" placeholder="0.00">
+          <!-- Row B: Perkara (full width) -->
+          <div class="de-grid g4">
+            <div class="de-field" style="grid-column: 1 / -1;">
+              <label>&#128221; Perkara / Perihal <span class="req">*</span></label>
+              <textarea id="perkara" name="perkara" required placeholder="Penerangan transaksi..." rows="2"></textarea>
             </div>
           </div>
-        </div>
 
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary">
-            <span class="btn-icon">💾</span>
-            Simpan Data
-          </button>
-          <button type="button" class="btn btn-secondary" onclick="resetForm()">
-            <span class="btn-icon">🔄</span>
-            Reset
-          </button>
-        </div>
-        <div id="message" class="message"></div>
-      </form>
+          <hr class="de-hr">
+
+          <!-- Maklumat Kewangan -->
+          <div class="de-sec">&#128176; Maklumat Kewangan</div>
+
+          <!-- Budget info panel -->
+          <div class="de-baki-panel" id="bakiPanel">
+            <span>Peruntukan: <strong id="infoPeruntukan">RM 0.00</strong></span>
+            <span>Dibelanjakan: <strong id="infoDibelanjakan">RM 0.00</strong></span>
+            <span>Baki Semasa: <strong id="infoBakiSemasa" class="baki-ok">RM 0.00</strong></span>
+            <span id="infoSelepas" style="display:none;">Selepas bil ini: <strong id="infoBakiSelepas">RM 0.00</strong></span>
+          </div>
+
+          <!-- Row C: Bayaran | Liabiliti -->
+          <div class="de-grid" style="grid-template-columns:1fr 1fr;">
+            <div class="de-field">
+              <label>&#128181; Bayaran (RM) <span class="req">*</span></label>
+              <input type="number" id="bayaran" name="bayaran" step="0.01" min="0" placeholder="0.00" oninput="updateBakiPreview()">
+            </div>
+            <div class="de-field">
+              <label>&#9878;&#65039; Liabiliti</label>
+              <input type="text" id="liabiliti" name="liabiliti" placeholder="Butiran liabiliti">
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="de-actions">
+            <button type="submit" class="de-btn-save" id="submitBtn">&#128190; Simpan Data</button>
+            <button type="button" class="de-btn-reset" onclick="resetForm()">&#128260; Set Semula</button>
+          </div>
+
+        </form>
+      </div>
     </div>
   </div>
 
+  <div class="de-toast" id="toast"></div>
+
   <script>
-    // Load user info
+    const catIcons = { perbekalan:'&#128230;', pembangunan:'&#127959;&#65039;', gaji:'&#128176;', operasi:'&#9881;&#65039;', penyelenggaraan:'&#128295;', utiliti:'&#128161;' };
+    const rawCat  = sessionStorage.getItem('billCategory') || 'perbekalan';
+    const category = rawCat.toLowerCase();
+    document.getElementById('catBadge').textContent =
+      category.charAt(0).toUpperCase() + category.slice(1);
+
     async function loadUserInfo() {
       try {
-        const response = await fetch('/api/user', { credentials: 'same-origin' });
-        const data = await response.json();
-        const username = data.user?.username || data.username;
-        document.getElementById('username').textContent = username;
-      } catch (error) {
-        console.error('Error loading user info:', error);
+        const r = await fetch('/api/user', { credentials: 'same-origin' });
+        const d = await r.json();
+        document.getElementById('username').textContent = d.user?.username || d.username || '';
+      } catch(e) {}
+    }
+
+    let _bakiSemasa = 0;
+
+    async function loadBalance() {
+      try {
+        const r = await fetch('/api/balance/' + category, { credentials: 'same-origin' });
+        const d = await r.json();
+        if (d.success) {
+          _bakiSemasa = parseFloat(d.baki) || 0;
+          document.getElementById('infoPeruntukan').textContent = 'RM ' + parseFloat(d.peruntukan).toFixed(2);
+          document.getElementById('infoDibelanjakan').textContent = 'RM ' + parseFloat(d.jumlah_bayaran).toFixed(2);
+          const bakiEl = document.getElementById('infoBakiSemasa');
+          bakiEl.textContent = 'RM ' + _bakiSemasa.toFixed(2);
+          bakiEl.className = _bakiSemasa < 0 ? 'baki-over' : 'baki-ok';
+          updateBakiPreview();
+        }
+      } catch(e) {}
+    }
+
+    function updateBakiPreview() {
+      const bay = parseFloat(document.getElementById('bayaran').value) || 0;
+      const after = _bakiSemasa - bay;
+      const selepasEl = document.getElementById('infoSelepas');
+      const selepasVal = document.getElementById('infoBakiSelepas');
+      if (bay > 0) {
+        selepasEl.style.display = 'inline';
+        selepasVal.textContent = 'RM ' + after.toFixed(2);
+        selepasVal.className = after < 0 ? 'baki-over' : 'baki-ok';
+      } else {
+        selepasEl.style.display = 'none';
       }
     }
 
-    // Category selection - removed, using default category
-    document.addEventListener('DOMContentLoaded', function() {
-      // Set default category (can be changed later if needed)
-      // For now, all new entries will be categorized as 'Perbekalan' by default
-    });
+    function showToast(msg, isError = false) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'de-toast' + (isError ? ' error' : '');
+      void t.offsetWidth;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3200);
+    }
 
-    // Reset form function
     function resetForm() {
       document.getElementById('dataForm').reset();
-      // Clear message
-      document.getElementById('message').innerHTML = '';
+      document.getElementById('tarikh').value = new Date().toISOString().split('T')[0];
+      document.getElementById('infoSelepas').style.display = 'none';
+      loadBalance();
     }
 
-    // Handle form submission
     document.getElementById('dataForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-
-      const category = sessionStorage.getItem('billCategory') || 'perbekalan';
-      const tarikh = document.getElementById('tarikh').value;
-      const rujukan = document.getElementById('rujukan').value;
-      const dibayar_kepada = document.getElementById('dibayar_kepada').value;
+      const tarikh  = document.getElementById('tarikh').value;
       const perkara = document.getElementById('perkara').value;
-      const liabiliti = document.getElementById('liabiliti').value;
-      const bayaran = document.getElementById('bayaran').value;
-      const jumlah_bayaran = document.getElementById('jumlah_bayaran').value;
-      const baki = document.getElementById('baki').value;
-      const image = document.getElementById('image').files[0];
-      const messageDiv = document.getElementById('message');
+      if (!tarikh || !perkara) { showToast('Sila isi Tarikh dan Perkara', true); return; }
 
-      if (!tarikh || !perkara) {
-        messageDiv.textContent = 'Sila isi Tarikh dan Perkara';
-        messageDiv.className = 'message error';
-        messageDiv.style.display = 'block';
-        return;
-      }
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true; btn.textContent = 'Menyimpan...';
 
-      // Show loading state
-      const submitBtn = document.querySelector('#dataForm button[type="submit"]');
-      const originalText = submitBtn.innerHTML;
-      submitBtn.innerHTML = '<span class="loading-spinner"></span> Menyimpan...';
-      submitBtn.disabled = true;
+      const fd = new FormData();
+      fd.append('category',       category);
+      fd.append('tarikh',         tarikh);
+      fd.append('rujukan',        document.getElementById('rujukan').value);
+      fd.append('kepala_vot',     document.getElementById('kepala_vot').value);
+      fd.append('dibayar_kepada', document.getElementById('dibayar_kepada').value);
+      fd.append('perkara',        perkara);
+      fd.append('liabiliti',      document.getElementById('liabiliti').value);
+      fd.append('bayaran',        document.getElementById('bayaran').value);
 
       try {
-        const formData = new FormData();
-        formData.append('category', category);
-        formData.append('tarikh', tarikh);
-        formData.append('rujukan', rujukan);
-        formData.append('dibayar_kepada', dibayar_kepada);
-        formData.append('perkara', perkara);
-        formData.append('liabiliti', liabiliti);
-        formData.append('bayaran', bayaran);
-        formData.append('jumlah_bayaran', jumlah_bayaran);
-        formData.append('baki', baki);
-        if (image) {
-          formData.append('image', image);
-        }
-
-        const response = await fetch('/api/data', {
-          method: 'POST',
-          credentials: 'same-origin',
-          body: formData
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-          messageDiv.textContent = '✅ Data berjaya disimpan!';
-          messageDiv.className = 'message success';
-          messageDiv.style.display = 'block';
-
-          // Reset form after 2 seconds
-          setTimeout(() => {
-            resetForm();
-          }, 2000);
-        } else {
-          messageDiv.textContent = result.message || '❌ Ralat menyimpan data';
-          messageDiv.className = 'message error';
-          messageDiv.style.display = 'block';
-        }
-      } catch (error) {
-        console.error('Error saving data:', error);
-        messageDiv.textContent = '❌ Ralat menyimpan data. Sila cuba lagi.';
-        messageDiv.className = 'message error';
-        messageDiv.style.display = 'block';
+        const res    = await fetch('/api/data', { method:'POST', credentials:'same-origin', body:fd });
+        const result = await res.json();
+        if (result.success) { showToast('Data berjaya disimpan!'); setTimeout(resetForm, 1800); }
+        else { showToast(result.error || 'Ralat menyimpan data', true); }
+      } catch(err) {
+        showToast('Ralat sambungan. Cuba lagi.', true);
       } finally {
-        // Reset button state
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
+        btn.disabled = false; btn.textContent = 'Simpan Data';
       }
     });
 
-    // Logout
     async function logout() {
-      try {
-        const response = await fetch('/api/logout', {
-          method: 'POST',
-          credentials: 'same-origin'
-        });
-        const data = await response.json();
-
-        if (data.success) {
-          window.location.href = '/';
-        }
-      } catch (error) {
-        console.error('Error logging out:', error);
-      }
+      try { const r = await fetch('/api/logout',{method:'POST',credentials:'same-origin'}); if((await r.json()).success) window.location.href='/'; } catch(e){}
     }
 
-    // Initialize
+    document.getElementById('tarikh').value = new Date().toISOString().split('T')[0];
     loadUserInfo();
+    loadBalance();
   </script>
 </body>
 </html>

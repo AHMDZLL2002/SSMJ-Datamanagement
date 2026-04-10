@@ -117,27 +117,39 @@ app.get('/api/data/debug', (req, res) => {
 
 // Create data entry
 app.post('/api/data', requireAuth, upload.single('image'), (req, res) => {
-  const { category, tarikh, rujukan, dibayar_kepada, perkara, liabiliti, bayaran, jumlah_bayaran, baki } = req.body;
+  const { category, tarikh, rujukan, dibayar_kepada, kepala_vot, perkara, liabiliti, bayaran } = req.body;
   const image = req.file ? '/uploads/' + req.file.filename : null;
   const userId = req.session.userId;
 
-  if (!userId) {
-    return res.status(401).json({ error: 'User not authenticated' });
-  }
+  if (!userId) return res.status(401).json({ error: 'User not authenticated' });
 
-  // Normalize category to lowercase for consistent filtering across the app
   const categoryNormalized = category ? category.toString().toLowerCase() : 'perbekalan';
+  const bayaranAmount = parseFloat(bayaran) || 0;
 
-  db.run(`INSERT INTO data (user_id, category, tarikh, rujukan, dibayar_kepada, perkara, liabiliti, bayaran, jumlah_bayaran, baki, image)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-         [userId, categoryNormalized, tarikh, rujukan, dibayar_kepada, perkara, liabiliti, bayaran, jumlah_bayaran, baki, image],
-         function(err) {
-           if (err) {
-             console.error('Database error inserting data:', err);
-             return res.status(500).json({ error: 'Database error: ' + err.message });
-           }
-           res.json({ success: true, id: this.lastID });
-         });
+  // Compute running jumlah_bayaran and baki from category budget
+  db.get('SELECT COALESCE(SUM(bayaran), 0) as total FROM data WHERE LOWER(category) = ?',
+    [categoryNormalized], (err, row) => {
+      if (err) return res.status(500).json({ error: 'Database error' });
+      const prevTotal = parseFloat(row.total) || 0;
+      const jumlah_bayaran = prevTotal + bayaranAmount;
+
+      db.get('SELECT peruntukan FROM category_budgets WHERE category = ?',
+        [categoryNormalized], (err2, budget) => {
+          const peruntukan = budget ? parseFloat(budget.peruntukan) || 0 : 0;
+          const baki = peruntukan - jumlah_bayaran;
+
+          db.run(`INSERT INTO data (user_id, category, tarikh, rujukan, dibayar_kepada, kepala_vot, perkara, liabiliti, bayaran, jumlah_bayaran, baki, image)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [userId, categoryNormalized, tarikh, rujukan, dibayar_kepada, kepala_vot, perkara, liabiliti, bayaranAmount, jumlah_bayaran, baki, image],
+            function(insertErr) {
+              if (insertErr) {
+                console.error('Database error inserting data:', insertErr);
+                return res.status(500).json({ error: 'Database error: ' + insertErr.message });
+              }
+              res.json({ success: true, id: this.lastID, jumlah_bayaran, baki });
+            });
+        });
+    });
 });
 
 // Delete data entry
@@ -293,10 +305,78 @@ app.delete('/api/notices/:id', requireAdmin, (req, res) => {
   });
 });
 
+// Get all category budgets
+app.get('/api/budgets', requireAuth, (req, res) => {
+  db.all('SELECT category, peruntukan, updated_at FROM category_budgets ORDER BY id', (err, rows) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    res.json({ success: true, budgets: rows || [] });
+  });
+});
+
+// Set/update budget for a category
+app.post('/api/budgets', requireAuth, (req, res) => {
+  const { category, peruntukan } = req.body;
+  if (!category) return res.status(400).json({ error: 'Category required' });
+  const catNorm = category.toString().toLowerCase();
+  const amount = parseFloat(peruntukan) || 0;
+  db.run(`INSERT INTO category_budgets (category, peruntukan, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)
+          ON CONFLICT(category) DO UPDATE SET peruntukan = excluded.peruntukan, updated_at = CURRENT_TIMESTAMP`,
+    [catNorm, amount], function(err) {
+      if (err) return res.status(500).json({ error: 'Database error' });
+      res.json({ success: true });
+    });
+});
+
+// Get balance info for a category
+app.get('/api/balance/:category', requireAuth, (req, res) => {
+  const cat = req.params.category.toLowerCase();
+  db.get('SELECT peruntukan FROM category_budgets WHERE category = ?', [cat], (err, budget) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    const peruntukan = budget ? parseFloat(budget.peruntukan) || 0 : 0;
+    db.get('SELECT COALESCE(SUM(bayaran), 0) as total FROM data WHERE LOWER(category) = ?', [cat], (err2, row) => {
+      if (err2) return res.status(500).json({ error: 'Database error' });
+      const jumlah_bayaran = parseFloat(row.total) || 0;
+      res.json({ success: true, peruntukan, jumlah_bayaran, baki: peruntukan - jumlah_bayaran });
+    });
+  });
+});
+
 // Serve index.html for root
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+// ── Kepala VOT List API ─────────────────────────────────────────
+// Get all kepala vot options
+app.get('/api/kepala-vot', requireAuth, (req, res) => {
+  db.all('SELECT * FROM kepala_vot_list ORDER BY kod ASC', (err, rows) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    res.json({ success: true, data: rows || [] });
+  });
+});
+
+// Add kepala vot option (admin only)
+app.post('/api/kepala-vot', requireAdmin, (req, res) => {
+  const { kod, keterangan } = req.body;
+  if (!kod) return res.status(400).json({ error: 'Kod diperlukan' });
+  db.run('INSERT INTO kepala_vot_list (kod, keterangan) VALUES (?, ?)', [kod.trim(), keterangan || ''], function(err) {
+    if (err) {
+      if (err.message.includes('UNIQUE')) return res.status(400).json({ error: 'Kod sudah wujud' });
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json({ success: true, id: this.lastID });
+  });
+});
+
+// Delete kepala vot option (admin only)
+app.delete('/api/kepala-vot/:id', requireAdmin, (req, res) => {
+  db.run('DELETE FROM kepala_vot_list WHERE id = ?', [req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    if (this.changes === 0) return res.status(404).json({ error: 'Tidak dijumpai' });
+    res.json({ success: true });
+  });
+});
+// ───────────────────────────────────────────────────────────────
 
 // Serve dashboard - check if user is authenticated
 app.get('/dashboard', (req, res) => {

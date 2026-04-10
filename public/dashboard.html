@@ -74,10 +74,15 @@
               <span class="menu-text">Penyelenggaraan</span>
             </button>
             <button class="menu-item submenu" onclick="switchView('buku-utiliti')">
-              <span class="menu-icon">💡</span>
+              <span class="menu-icon">&#128161;</span>
               <span class="menu-text">Utiliti</span>
             </button>
           </div>
+
+          <button class="menu-item" onclick="switchView('baki-vot')">
+            <span class="menu-icon">&#128200;</span>
+            <span class="menu-text">Baki VOT</span>
+          </button>
 
           <button class="menu-item" onclick="switchView('statistics')">
             <span class="menu-icon">📈</span>
@@ -98,6 +103,10 @@
             <button class="menu-item submenu" onclick="switchView('buat-notis')">
               <span class="menu-icon">📢</span>
               <span class="menu-text">Buat/Update Notis</span>
+            </button>
+            <button class="menu-item submenu" onclick="switchView('tambah-kepala-vot')">
+              <span class="menu-icon">&#128278;</span>
+              <span class="menu-text">Kepala VOT</span>
             </button>
           </div>
         </nav>
@@ -195,6 +204,7 @@
               <tr>
                 <th>Tarikh</th>
                 <th>Rujukan</th>
+                <th>Kepala VOT</th>
                 <th>Dibayar Kepada</th>
                 <th>Perkara</th>
                 <th>Bayaran</th>
@@ -235,6 +245,7 @@
               <tr>
                 <th>Tarikh</th>
                 <th>Rujukan</th>
+                <th>Kepala VOT</th>
                 <th>Dibayar Kepada</th>
                 <th>Perkara</th>
                 <th>Bayaran</th>
@@ -275,6 +286,7 @@
               <tr>
                 <th>Tarikh</th>
                 <th>Rujukan</th>
+                <th>Kepala VOT</th>
                 <th>Dibayar Kepada</th>
                 <th>Perkara</th>
                 <th>Bayaran</th>
@@ -315,6 +327,7 @@
               <tr>
                 <th>Tarikh</th>
                 <th>Rujukan</th>
+                <th>Kepala VOT</th>
                 <th>Dibayar Kepada</th>
                 <th>Perkara</th>
                 <th>Bayaran</th>
@@ -355,6 +368,7 @@
               <tr>
                 <th>Tarikh</th>
                 <th>Rujukan</th>
+                <th>Kepala VOT</th>
                 <th>Dibayar Kepada</th>
                 <th>Perkara</th>
                 <th>Bayaran</th>
@@ -395,6 +409,7 @@
               <tr>
                 <th>Tarikh</th>
                 <th>Rujukan</th>
+                <th>Kepala VOT</th>
                 <th>Dibayar Kepada</th>
                 <th>Perkara</th>
                 <th>Bayaran</th>
@@ -404,6 +419,54 @@
             </thead>
             <tbody id="bukuUtilitiBody"></tbody>
           </table>
+          </div>
+        </div>
+
+        <!-- Baki VOT View -->
+        <div id="bakiVotView" class="view-section" style="display: none;">
+          <div class="view-header">
+            <h1>&#128200; Baki VOT - Peruntukan Kategori</h1>
+          </div>
+
+          <!-- Budget summary table -->
+          <div class="table-wrapper" style="margin-bottom: 32px;">
+            <table class="data-table" id="bakiVotTable">
+              <thead>
+                <tr>
+                  <th>Kategori</th>
+                  <th>Peruntukan (RM)</th>
+                  <th>Jumlah Bayaran (RM)</th>
+                  <th>Baki (RM)</th>
+                  <th>Tindakan</th>
+                </tr>
+              </thead>
+              <tbody id="bakiVotBody"></tbody>
+            </table>
+          </div>
+
+          <!-- Set peruntukan form -->
+          <div style="background:#f8f9ff;border:1px solid #e4e8ff;border-radius:10px;padding:20px;max-width:520px;">
+            <h3 style="margin:0 0 14px;color:#667eea;font-size:14px;">&#9997;&#65039; Kemaskini Peruntukan</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+              <div>
+                <label style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;display:block;margin-bottom:4px;">Kategori</label>
+                <select id="budgetCategory" style="width:100%;padding:7px 10px;border:1.5px solid #e2e2e2;border-radius:6px;font-size:13px;">
+                  <option value="perbekalan">Perbekalan</option>
+                  <option value="pembangunan">Pembangunan</option>
+                  <option value="gaji">Gaji</option>
+                  <option value="operasi">Operasi</option>
+                  <option value="penyelenggaraan">Penyelenggaraan</option>
+                  <option value="utiliti">Utiliti</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;display:block;margin-bottom:4px;">Peruntukan (RM)</label>
+                <input type="number" id="budgetAmount" step="0.01" min="0" placeholder="0.00"
+                  style="width:100%;padding:7px 10px;border:1.5px solid #e2e2e2;border-radius:6px;font-size:13px;box-sizing:border-box;">
+              </div>
+            </div>
+            <button onclick="saveBudget()" style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;border-radius:6px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;">&#128190; Simpan Peruntukan</button>
+            <span id="budgetMsg" style="margin-left:12px;font-size:12px;color:#2ecc71;display:none;">Berjaya disimpan!</span>
           </div>
         </div>
 
@@ -499,6 +562,7 @@
               <tr>
                 <th>Tarikh</th>
                 <th>Rujukan</th>
+                <th>Kepala VOT</th>
                 <th>Dibayar Kepada</th>
                 <th>Perkara</th>
                 <th>Kategori</th>
@@ -506,7 +570,6 @@
                 <th>Bayaran</th>
                 <th>Jumlah Bayaran</th>
                 <th>Baki</th>
-                <th>Gambar</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -738,6 +801,10 @@
           document.getElementById('bukuUtilitiView').style.display = 'block';
           loadBukuVot('utiliti');
           break;
+        case 'baki-vot':
+          document.getElementById('bakiVotView').style.display = 'block';
+          loadBakiVot();
+          break;
         case 'statistics':
           document.getElementById('statisticsView').style.display = 'block';
           loadStatistics();
@@ -776,28 +843,36 @@
       });
     }
 
-    // Load Buku Vot (by category)
+    // Load Buku Vot (by category) - running totals recomputed from data
     async function loadBukuVot(category) {
       try {
-        const response = await fetch('/api/data?all=true', { credentials: 'same-origin' });
-        const result = await response.json();
+        const [dataResp, budgetResp] = await Promise.all([
+          fetch('/api/data?all=true', { credentials: 'same-origin' }),
+          fetch('/api/balance/' + category, { credentials: 'same-origin' })
+        ]);
+        const result = await dataResp.json();
+        const balResult = await budgetResp.json();
+        const peruntukan = balResult.success ? parseFloat(balResult.peruntukan) || 0 : 0;
 
-        if (!response.ok) {
-          document.getElementById('apiDebug').textContent = 'API /api/data error: ' + (result.error || response.status);
-        } else {
-          document.getElementById('apiDebug').textContent = '';
-        }
+        document.getElementById('apiDebug').textContent = '';
 
         if (result.success && Array.isArray(result.data)) {
-          // Filter data by category first (case-insensitive match)
-          const categoryData = result.data.filter(item => {
-            return item.category && item.category.toString().toLowerCase() === category.toLowerCase();
+          // Get ALL records for this category sorted by created_at ASC (for running total)
+          const allCatData = result.data
+            .filter(item => item.category && item.category.toString().toLowerCase() === category.toLowerCase())
+            .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+          // Compute running jumlah_bayaran and baki per row
+          let runningTotal = 0;
+          allCatData.forEach(item => {
+            runningTotal += parseFloat(item.bayaran) || 0;
+            item._jumlah = runningTotal;
+            item._baki = peruntukan - runningTotal;
           });
-          
+
           const monthSelectId = `monthSelect${category.charAt(0).toUpperCase() + category.slice(1)}`;
           const month = getSelectedMonth(monthSelectId);
-          
-          let filteredData = categoryData;
+          let filteredData = allCatData;
           if (month) {
             filteredData = filterDataByMonth(filteredData, month);
           }
@@ -809,19 +884,32 @@
           if (filteredData.length > 0) {
             filteredData.forEach(item => {
               const row = document.createElement('tr');
+              const bakiColor = item._baki < 0 ? 'color:#e74c3c;font-weight:700;' : '';
               row.innerHTML = `
                 <td>${item.tarikh || '-'}</td>
                 <td>${item.rujukan || '-'}</td>
+                <td>${item.kepala_vot || '-'}</td>
                 <td>${item.dibayar_kepada || '-'}</td>
                 <td>${item.perkara || '-'}</td>
                 <td>RM ${parseFloat(item.bayaran || 0).toFixed(2)}</td>
-                <td>RM ${parseFloat(item.jumlah_bayaran || 0).toFixed(2)}</td>
-                <td>RM ${parseFloat(item.baki || 0).toFixed(2)}</td>
+                <td>RM ${item._jumlah.toFixed(2)}</td>
+                <td style="${bakiColor}">RM ${item._baki.toFixed(2)}</td>
               `;
               tbody.appendChild(row);
             });
+            // Summary row
+            const summaryRow = document.createElement('tr');
+            summaryRow.style.cssText = 'background:#f0f4ff;font-weight:700;';
+            const lastItem = filteredData[filteredData.length - 1];
+            summaryRow.innerHTML = `
+              <td colspan="5" style="text-align:right;color:#667eea;">Peruntukan: RM ${peruntukan.toFixed(2)}</td>
+              <td>RM ${filteredData.reduce((s,i) => s + (parseFloat(i.bayaran)||0), 0).toFixed(2)}</td>
+              <td>RM ${lastItem._jumlah.toFixed(2)}</td>
+              <td style="${lastItem._baki < 0 ? 'color:#e74c3c;' : 'color:#27ae60;'}">RM ${lastItem._baki.toFixed(2)}</td>
+            `;
+            tbody.appendChild(summaryRow);
           } else {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">No data found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">Tiada data dijumpai</td></tr>';
           }
         }
       } catch (error) {
@@ -950,6 +1038,7 @@
             row.innerHTML = `
               <td>${item.tarikh || '-'}</td>
               <td>${item.rujukan || '-'}</td>
+              <td>${item.kepala_vot || '-'}</td>
               <td>${item.dibayar_kepada || '-'}</td>
               <td>${item.perkara || '-'}</td>
               <td>${item.category || '-'}</td>
@@ -957,7 +1046,6 @@
               <td>RM ${parseFloat(item.bayaran || 0).toFixed(2)}</td>
               <td>RM ${parseFloat(item.jumlah_bayaran || 0).toFixed(2)}</td>
               <td>RM ${parseFloat(item.baki || 0).toFixed(2)}</td>
-              <td>${imageHtml}</td>
               <td><button class="delete-btn" onclick="deleteData(${item.id})">Delete</button></td>
             `;
             tbody.appendChild(row);
@@ -969,6 +1057,82 @@
       } catch (error) {
         console.error('Error loading data:', error);
       }
+    }
+
+    // Load Baki VOT summary
+    async function loadBakiVot() {
+      try {
+        const [budgetsResp, dataResp] = await Promise.all([
+          fetch('/api/budgets', { credentials: 'same-origin' }),
+          fetch('/api/data?all=true', { credentials: 'same-origin' })
+        ]);
+        const budgetsResult = await budgetsResp.json();
+        const dataResult = await dataResp.json();
+
+        const tbody = document.getElementById('bakiVotBody');
+        tbody.innerHTML = '';
+
+        if (!budgetsResult.success) return;
+
+        const budgetMap = {};
+        (budgetsResult.budgets || []).forEach(b => { budgetMap[b.category] = parseFloat(b.peruntukan) || 0; });
+
+        const totalMap = {};
+        if (dataResult.success && Array.isArray(dataResult.data)) {
+          dataResult.data.forEach(item => {
+            const cat = (item.category || '').toLowerCase();
+            totalMap[cat] = (totalMap[cat] || 0) + (parseFloat(item.bayaran) || 0);
+          });
+        }
+
+        const cats = ['perbekalan', 'pembangunan', 'gaji', 'operasi', 'penyelenggaraan', 'utiliti'];
+        const labels = { perbekalan: 'Perbekalan', pembangunan: 'Pembangunan', gaji: 'Gaji', operasi: 'Operasi', penyelenggaraan: 'Penyelenggaraan', utiliti: 'Utiliti' };
+
+        cats.forEach(cat => {
+          const peruntukan = budgetMap[cat] || 0;
+          const jumlah = totalMap[cat] || 0;
+          const baki = peruntukan - jumlah;
+          const bakiColor = baki < 0 ? 'color:#e74c3c;font-weight:700;' : 'color:#27ae60;font-weight:700;';
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td><strong>${labels[cat]}</strong></td>
+            <td>RM ${peruntukan.toFixed(2)}</td>
+            <td>RM ${jumlah.toFixed(2)}</td>
+            <td style="${bakiColor}">RM ${baki.toFixed(2)}</td>
+            <td><button onclick="prefillBudget('${cat}', ${peruntukan})"
+              style="padding:4px 10px;font-size:11px;background:#667eea;color:white;border:none;border-radius:4px;cursor:pointer;">
+              Edit</button></td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (e) {
+        console.error('Error loading Baki VOT:', e);
+      }
+    }
+
+    function prefillBudget(cat, amount) {
+      document.getElementById('budgetCategory').value = cat;
+      document.getElementById('budgetAmount').value = amount;
+      document.getElementById('budgetAmount').focus();
+    }
+
+    async function saveBudget() {
+      const cat = document.getElementById('budgetCategory').value;
+      const amount = document.getElementById('budgetAmount').value;
+      const msg = document.getElementById('budgetMsg');
+      try {
+        const res = await fetch('/api/budgets', {
+          method: 'POST', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ category: cat, peruntukan: parseFloat(amount) || 0 })
+        });
+        const result = await res.json();
+        if (result.success) {
+          msg.style.display = 'inline';
+          setTimeout(() => { msg.style.display = 'none'; }, 2500);
+          loadBakiVot();
+        }
+      } catch(e) {}
     }
 
     // Load notices for INBOX with loading indicator
