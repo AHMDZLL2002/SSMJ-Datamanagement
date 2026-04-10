@@ -15,7 +15,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Session configuration
 app.use(session({
-  secret: 'your-secret-key', // Change this in production
+  secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
   cookie: { secure: false } // Set to true if using HTTPS
@@ -24,10 +24,22 @@ app.use(session({
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Persistent uploads directory (uses /var/data/uploads on Render, public/uploads locally)
+const UPLOADS_DIR = process.env.DB_PATH
+  ? path.join(path.dirname(process.env.DB_PATH), 'uploads')
+  : path.join(__dirname, 'public', 'uploads');
+
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
+// Serve uploaded files from persistent path
+app.use('/uploads', express.static(UPLOADS_DIR));
+
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, 'public', 'uploads'));
+    cb(null, UPLOADS_DIR);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
