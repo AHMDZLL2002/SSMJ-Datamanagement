@@ -266,6 +266,15 @@ body > * {
 .logo-container {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.navbar-title {
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .navbar-logo {
