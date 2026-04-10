@@ -80,6 +80,11 @@ function requireAdmin(req, res, next) {
   }
 }
 
+// Helper: get current Malaysia time as SQLite-compatible string (UTC+8)
+function getMalaysiaTime() {
+  return new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Kuala_Lumpur' }).replace('T', ' ');
+}
+
 // Routes
 
 // Login
@@ -94,7 +99,7 @@ app.post('/api/login', (req, res) => {
       req.session.username = user.username;
       // Log login event
       const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || null;
-      db.run('INSERT INTO login_logs (user_id, action, ip_address) VALUES (?, ?, ?)', [user.id, 'login', ip]);
+      db.run('INSERT INTO login_logs (user_id, action, ip_address, logged_at) VALUES (?, ?, ?, ?)', [user.id, 'login', ip, getMalaysiaTime()]);
       res.json({ success: true, user: { id: user.id, username: user.username } });
     } else {
       res.status(401).json({ error: 'Invalid credentials' });
@@ -112,7 +117,7 @@ app.post('/api/logout', (req, res) => {
     }
     // Log logout event
     if (userId) {
-      db.run('INSERT INTO login_logs (user_id, action, ip_address) VALUES (?, ?, ?)', [userId, 'logout', ip]);
+      db.run('INSERT INTO login_logs (user_id, action, ip_address, logged_at) VALUES (?, ?, ?, ?)', [userId, 'logout', ip, getMalaysiaTime()]);
     }
     res.json({ success: true });
   });
