@@ -1,6 +1,6 @@
 services:
 - type: web
-  name: data-storage-app
+  name: SSMJ-Datamanagement
   env: node
   plan: starter
   buildCommand: npm install
