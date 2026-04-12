@@ -146,6 +146,36 @@ The application uses SQLite with two main tables:
 - Implement CSRF protection
 - Add input validation and sanitization
 
+## Render Persistent Storage And Backup
+
+This project is configured to keep SQLite data persistent on Render disk and create automatic backups.
+
+- Main DB path in production: `/var/data/app.db`
+- Session DB path in production: `/var/data/sessions.db`
+- Backup directory in production: `/var/data/backups`
+
+### Automatic Backup Behavior
+
+- Startup backup runs once after server boot
+- Scheduled backup runs every `BACKUP_INTERVAL_HOURS` (default: 24)
+- Backup retention keeps latest `BACKUP_RETENTION_COUNT` snapshots (default: 14)
+- Each backup includes:
+   - main SQLite DB snapshot (`app-*.db`)
+   - sessions DB copy (`sessions-*.db`) if available
+   - metadata (`meta-*.json`)
+
+### Backup Environment Variables
+
+- `BACKUP_ENABLED` (`true`/`false`)
+- `BACKUP_INTERVAL_HOURS` (integer, minimum 1)
+- `BACKUP_RETENTION_COUNT` (integer, minimum 1)
+- `BACKUP_DIR` (absolute path)
+
+### Backup API Endpoints (Admin Only)
+
+- `GET /api/backup/status` - View backup configuration and files
+- `POST /api/backup/run` - Trigger manual backup immediately
+
 ## Future Enhancements
 
 - Password hashing with bcrypt

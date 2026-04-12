@@ -12,6 +12,14 @@ services:
     value: /var/data/app.db
   - key: SESSION_SECRET
     generateValue: true
+  - key: BACKUP_ENABLED
+    value: "true"
+  - key: BACKUP_INTERVAL_HOURS
+    value: "24"
+  - key: BACKUP_RETENTION_COUNT
+    value: "14"
+  - key: BACKUP_DIR
+    value: /var/data/backups
   disk:
     name: appdata
     mountPath: /var/data

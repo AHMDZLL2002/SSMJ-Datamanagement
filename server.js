@@ -10,6 +10,21 @@ const db = require('./database');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DB_FILE_PATH = process.env.DB_PATH || (process.env.NODE_ENV === 'production' ? '/var/data/app.db' : path.join(__dirname, 'app.db'));
+const BACKUP_DIR = process.env.BACKUP_DIR || path.join(path.dirname(DB_FILE_PATH), 'backups');
+const BACKUP_ENABLED = (process.env.BACKUP_ENABLED || 'true').toLowerCase() !== 'false';
+const BACKUP_INTERVAL_HOURS = Math.max(1, parseInt(process.env.BACKUP_INTERVAL_HOURS || '24', 10));
+const BACKUP_RETENTION_COUNT = Math.max(1, parseInt(process.env.BACKUP_RETENTION_COUNT || '14', 10));
+
+let backupInProgress = false;
+let lastBackupInfo = {
+  status: 'not-run',
+  reason: null,
+  startedAt: null,
+  completedAt: null,
+  dbBackupFile: null,
+  sessionBackupFile: null,
+  error: null
+};
 
 // Trust Render's reverse proxy so secure cookies work over HTTPS
 app.set('trust proxy', 1);
@@ -42,6 +57,121 @@ const UPLOADS_DIR = DB_FILE_PATH.startsWith('/var/data')
 
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
+if (BACKUP_ENABLED && !fs.existsSync(BACKUP_DIR)) {
+  fs.mkdirSync(BACKUP_DIR, { recursive: true });
+}
+
+function makeBackupTimestamp() {
+  return new Date().toISOString().replace(/[:.]/g, '-');
+}
+
+function pruneOldBackups() {
+  try {
+    const files = fs.readdirSync(BACKUP_DIR)
+      .filter((name) => name.endsWith('.db') || name.endsWith('.json'))
+      .map((name) => {
+        const fullPath = path.join(BACKUP_DIR, name);
+        const stat = fs.statSync(fullPath);
+        return { name, fullPath, mtimeMs: stat.mtimeMs };
+      })
+      .sort((a, b) => b.mtimeMs - a.mtimeMs);
+
+    const uniqueBuckets = [];
+    const seenKeys = new Set();
+    files.forEach((file) => {
+      const key = file.name.replace(/^(app|sessions|meta)-/, '').replace(/\.(db|json)$/, '');
+      if (!seenKeys.has(key)) {
+        seenKeys.add(key);
+        uniqueBuckets.push(key);
+      }
+    });
+
+    const keepKeys = new Set(uniqueBuckets.slice(0, BACKUP_RETENTION_COUNT));
+    files.forEach((file) => {
+      const key = file.name.replace(/^(app|sessions|meta)-/, '').replace(/\.(db|json)$/, '');
+      if (!keepKeys.has(key)) {
+        try { fs.unlinkSync(file.fullPath); } catch (_) {}
+      }
+    });
+  } catch (err) {
+    console.error('Backup prune error:', err.message);
+  }
+}
+
+function runSqliteBackup(reason = 'manual') {
+  return new Promise((resolve, reject) => {
+    if (!BACKUP_ENABLED) {
+      return reject(new Error('Backup disabled by configuration'));
+    }
+    if (backupInProgress) {
+      return reject(new Error('Backup already in progress'));
+    }
+
+    backupInProgress = true;
+    const startedAt = new Date();
+    const stamp = makeBackupTimestamp();
+    const dbBackupFile = path.join(BACKUP_DIR, `app-${stamp}.db`);
+    const sessionSrc = path.join(SESSION_DB_DIR, 'sessions.db');
+    const sessionBackupFile = path.join(BACKUP_DIR, `sessions-${stamp}.db`);
+    const metaFile = path.join(BACKUP_DIR, `meta-${stamp}.json`);
+
+    lastBackupInfo = {
+      status: 'running',
+      reason,
+      startedAt: startedAt.toISOString(),
+      completedAt: null,
+      dbBackupFile,
+      sessionBackupFile: fs.existsSync(sessionSrc) ? sessionBackupFile : null,
+      error: null
+    };
+
+    const escapedBackupPath = dbBackupFile.replace(/'/g, "''");
+
+    db.serialize(() => {
+      db.run('PRAGMA wal_checkpoint(TRUNCATE)');
+      db.run(`VACUUM INTO '${escapedBackupPath}'`, (vacuumErr) => {
+        if (vacuumErr) {
+          backupInProgress = false;
+          lastBackupInfo.status = 'failed';
+          lastBackupInfo.completedAt = new Date().toISOString();
+          lastBackupInfo.error = vacuumErr.message;
+          return reject(vacuumErr);
+        }
+
+        try {
+          if (fs.existsSync(sessionSrc)) {
+            fs.copyFileSync(sessionSrc, sessionBackupFile);
+          }
+
+          const summary = {
+            reason,
+            createdAt: new Date().toISOString(),
+            dbBackupFile,
+            dbSizeBytes: fs.existsSync(dbBackupFile) ? fs.statSync(dbBackupFile).size : 0,
+            sessionBackupFile: fs.existsSync(sessionBackupFile) ? sessionBackupFile : null,
+            sessionSizeBytes: fs.existsSync(sessionBackupFile) ? fs.statSync(sessionBackupFile).size : 0
+          };
+          fs.writeFileSync(metaFile, JSON.stringify(summary, null, 2), 'utf8');
+
+          pruneOldBackups();
+
+          backupInProgress = false;
+          lastBackupInfo.status = 'success';
+          lastBackupInfo.completedAt = new Date().toISOString();
+          lastBackupInfo.error = null;
+          resolve(summary);
+        } catch (fileErr) {
+          backupInProgress = false;
+          lastBackupInfo.status = 'failed';
+          lastBackupInfo.completedAt = new Date().toISOString();
+          lastBackupInfo.error = fileErr.message;
+          reject(fileErr);
+        }
+      });
+    });
+  });
 }
 
 // Serve uploaded files from persistent path
@@ -153,8 +283,57 @@ app.get('/api/status', (req, res) => {
     db_size: dbSize,
     session_db: sessionDbPath,
     node_env: process.env.NODE_ENV || 'development',
-    warning: !isPersistent ? 'DB_PATH env var not set to /var/data/app.db - disk not mounted!' : null
+    warning: !isPersistent ? 'DB_PATH env var not set to /var/data/app.db - disk not mounted!' : null,
+    backup: {
+      enabled: BACKUP_ENABLED,
+      directory: BACKUP_DIR,
+      intervalHours: BACKUP_INTERVAL_HOURS,
+      retentionCount: BACKUP_RETENTION_COUNT,
+      inProgress: backupInProgress,
+      last: lastBackupInfo
+    }
   });
+});
+
+// Admin backup endpoints
+app.get('/api/backup/status', requireAdmin, (req, res) => {
+  let files = [];
+  try {
+    if (fs.existsSync(BACKUP_DIR)) {
+      files = fs.readdirSync(BACKUP_DIR)
+        .filter((name) => name.endsWith('.db') || name.endsWith('.json'))
+        .map((name) => {
+          const fullPath = path.join(BACKUP_DIR, name);
+          const stat = fs.statSync(fullPath);
+          return { name, sizeBytes: stat.size, modifiedAt: new Date(stat.mtimeMs).toISOString() };
+        })
+        .sort((a, b) => new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime());
+    }
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to read backup directory', details: err.message });
+  }
+
+  res.json({
+    success: true,
+    config: {
+      enabled: BACKUP_ENABLED,
+      directory: BACKUP_DIR,
+      intervalHours: BACKUP_INTERVAL_HOURS,
+      retentionCount: BACKUP_RETENTION_COUNT
+    },
+    inProgress: backupInProgress,
+    lastBackup: lastBackupInfo,
+    files
+  });
+});
+
+app.post('/api/backup/run', requireAdmin, async (req, res) => {
+  try {
+    const summary = await runSqliteBackup('manual-api');
+    res.json({ success: true, summary });
+  } catch (err) {
+    res.status(500).json({ error: 'Backup failed', details: err.message, lastBackup: lastBackupInfo });
+  }
 });
 
 // Get user data or all data for dashboard views
@@ -1345,10 +1524,32 @@ app.get('/api/penyata/excel', requireAuth, async (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  const dbPath = process.env.DB_PATH || path.join(__dirname, 'app.db');
+  const dbPath = DB_FILE_PATH;
   const isPersistent = dbPath.startsWith('/var/data');
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(`Database path: ${dbPath}`);
   console.log(`Session store: ${path.join(SESSION_DB_DIR, 'sessions.db')}`);
   console.log(`Persistent storage: ${isPersistent ? 'YES (/var/data disk mounted)' : 'NO (local - data will be lost on restart)'}`);
+
+  if (BACKUP_ENABLED) {
+    console.log(`Backup protection: ON (every ${BACKUP_INTERVAL_HOURS}h, keep ${BACKUP_RETENTION_COUNT}, dir ${BACKUP_DIR})`);
+
+    setTimeout(() => {
+      runSqliteBackup('startup').then((summary) => {
+        console.log('Startup backup created:', summary.dbBackupFile);
+      }).catch((err) => {
+        console.error('Startup backup failed:', err.message);
+      });
+    }, 30000);
+
+    setInterval(() => {
+      runSqliteBackup('scheduled').then((summary) => {
+        console.log('Scheduled backup created:', summary.dbBackupFile);
+      }).catch((err) => {
+        console.error('Scheduled backup failed:', err.message);
+      });
+    }, BACKUP_INTERVAL_HOURS * 60 * 60 * 1000);
+  } else {
+    console.log('Backup protection: OFF');
+  }
 });
