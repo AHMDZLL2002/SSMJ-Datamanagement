@@ -1081,7 +1081,7 @@ app.get('/api/penyata/pdf', requireAuth, (req, res) => {
 
     const selectedKod = kepala_vot ? String(kepala_vot).trim() : '';
     const descFromQuery = kepala_vot_desc ? String(kepala_vot_desc).trim() : '';
-    const runPdf = (resolvedKodDesc = '', resolvedPeruntukan = 0) => {
+    const runPdf = (resolvedKodDesc = '', resolvedPeruntukan = 0, kvMetaByKod = {}) => {
     try {
       const PDFDocument = require('pdfkit');
       const fsLib = require('fs');
@@ -1117,7 +1117,7 @@ app.get('/api/penyata/pdf', requireAuth, (req, res) => {
         { h:'Tarikh',               w:72,  a:'left',   k:'tarikh'         },
         { h:'Rujukan Transaksi',    w:96,  a:'left',   k:'rujukan'        },
         { h:'Dibayar Kepada',       w:132, a:'left',   k:'dibayar_kepada' },
-        { h:'Butiran Transaksi',    w:220, a:'left',   k:'perkara'        },
+        { h:'Butiran Transaksi',    w:220, a:'left',   k:'butiran_penyata' },
         { h:'Amaun (RM)',           w:82,  a:'right',  k:'bayaran'        },
         { h:'Jumlah Bayaran (RM)',  w:87,  a:'right',  k:'jumlah_bayaran' },
         { h:'Baki Semasa (RM)',     w:87,  a:'right',  k:'baki'           },
@@ -1252,16 +1252,25 @@ app.get('/api/penyata/pdf', requireAuth, (req, res) => {
       const sourceData = (data || []).slice().sort((a, b) => new Date(a.tarikh || a.created_at) - new Date(b.tarikh || b.created_at));
       sourceData.forEach((row) => {
         const kod = String(row.kepala_vot || '').trim();
+        const kodPeruntukan = selectedKod
+          ? peruntukanForSelectedKod
+          : (kvMetaByKod[kod]?.peruntukan || 0);
         if (!runningByKod[kod]) {
           runningByKod[kod] = {
             jumlah: 0,
-            peruntukan: selectedKod ? peruntukanForSelectedKod : 0
+            peruntukan: kodPeruntukan
           };
         }
+        const bakiAwal = runningByKod[kod].peruntukan;
         const n = parseFloat(row.bayaran) || 0;
         runningByKod[kod].jumlah += n;
         row.jumlah_bayaran = runningByKod[kod].jumlah;
         row.baki = runningByKod[kod].peruntukan - runningByKod[kod].jumlah;
+        const perkaraAsal = String(row.perkara || '-').trim();
+        const isFirstKodRow = Math.abs(runningByKod[kod].jumlah - n) < 1e-9;
+        row.butiran_penyata = isFirstKodRow
+          ? `BAKI AWAL: RM ${fmtAmount(bakiAwal)} | ${perkaraAsal}`
+          : perkaraAsal;
       });
       data = sourceData;
 
@@ -1327,22 +1336,33 @@ app.get('/api/penyata/pdf', requireAuth, (req, res) => {
     }
     };
 
-    if (selectedKod) {
-      db.get(
-        'SELECT keterangan, peruntukan FROM kepala_vot_list WHERE kod = ? AND LOWER(category) = LOWER(?) ORDER BY id DESC LIMIT 1',
-        [selectedKod, (category || '')],
-        (kvErr, kvRow) => {
-          const resolved = (!kvErr && kvRow && kvRow.keterangan)
-            ? String(kvRow.keterangan).trim()
-            : descFromQuery;
-          const resolvedPeruntukan = (!kvErr && kvRow) ? (parseFloat(kvRow.peruntukan) || 0) : 0;
-          runPdf(resolved, resolvedPeruntukan);
+    db.all(
+      'SELECT kod, keterangan, peruntukan FROM kepala_vot_list WHERE LOWER(category) = LOWER(?) ORDER BY id DESC',
+      [category || ''],
+      (kvErr, kvRows) => {
+        const kvMetaByKod = {};
+        if (!kvErr && Array.isArray(kvRows)) {
+          kvRows.forEach((kv) => {
+            const kod = String(kv.kod || '').trim();
+            if (!kod || kvMetaByKod[kod]) return;
+            kvMetaByKod[kod] = {
+              keterangan: String(kv.keterangan || '').trim(),
+              peruntukan: parseFloat(kv.peruntukan) || 0
+            };
+          });
         }
-      );
-      return;
-    }
 
-    runPdf(descFromQuery, 0);
+        if (selectedKod) {
+          const selectedMeta = kvMetaByKod[selectedKod] || { keterangan: '', peruntukan: 0 };
+          const resolvedDesc = selectedMeta.keterangan || descFromQuery;
+          const resolvedPeruntukan = selectedMeta.peruntukan || 0;
+          runPdf(resolvedDesc, resolvedPeruntukan, kvMetaByKod);
+          return;
+        }
+
+        runPdf(descFromQuery, 0, kvMetaByKod);
+      }
+    );
   });
 });
 
