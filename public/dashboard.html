@@ -497,14 +497,10 @@
           <div class="view-header">
             <h1>Paparan Data</h1>
             <div class="view-controls">
-              <select id="categorySelectData" onchange="loadData()" class="month-select" style="margin-right: 10px;">
-                <option value="">Semua Kategori</option>
-                <option value="perbekalan">Perbekalan</option>
-                <option value="pembangunan">Pembangunan</option>
-                <option value="gaji">Gaji</option>
-                <option value="operasi">Operasi</option>
-                <option value="penyelenggaraan">Penyelenggaraan</option>
-                <option value="utiliti">Utiliti</option>
+              <select id="bukuVotSelectDataPdf" class="month-select" style="margin-right: 10px;" title="Penapis ini digunakan untuk Export PDF sahaja">
+                <option value="">Tapis PDF: Semua Buku VOT</option>
+                <option value="210100">Tapis PDF: 210100 - PERBELANJAAN SEKRETARIAT SABAH MAJU JAYA</option>
+                <option value="210200">Tapis PDF: 210200 - PROGRAM MENOKTAHKAN MISKIN TEGAR</option>
               </select>
               <select id="monthSelectData" onchange="loadData()" class="month-select">
                 <option value="">Semua Bulan</option>
@@ -1439,13 +1435,7 @@
           };
 
           const month = getSelectedMonth('monthSelectData');
-          const category = document.getElementById('categorySelectData').value;
           let data = result.data;
-          
-          // Filter by category first (normalize case)
-          if (category) {
-            data = data.filter(item => item.category && item.category.toString().toLowerCase() === category.toString().toLowerCase());
-          }
           
           // Then filter by month
           if (month) {
@@ -1834,11 +1824,11 @@
 
     // Export data (from Paparan Data view)
     function exportData(format) {
-      const month    = getSelectedMonth('monthSelectData');
-      const category = document.getElementById('categorySelectData')?.value || '';
-      const params   = new URLSearchParams();
-      if (month)    params.set('month', month);
-      if (category) params.set('category', category);
+      const month      = getSelectedMonth('monthSelectData');
+      const bukuVotPdf = document.getElementById('bukuVotSelectDataPdf')?.value || '';
+      const params     = new URLSearchParams();
+      if (month) params.set('month', month);
+      if (format === 'pdf' && bukuVotPdf) params.set('buku_vot', bukuVotPdf);
       const qs = params.toString() ? '?' + params.toString() : '';
       if (format === 'pdf')   window.location.href = '/api/penyata/pdf'   + qs;
       else if (format === 'excel') window.location.href = '/api/penyata/excel' + qs;
