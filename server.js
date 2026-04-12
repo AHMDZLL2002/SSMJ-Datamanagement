@@ -1114,15 +1114,15 @@ app.get('/api/penyata/pdf', requireAuth, (req, res) => {
 
       // Accountant-style columns
       const cols = [
-        { h:'Tarikh',               w:78,  a:'left',   k:'tarikh'         },
-        { h:'Rujukan Transaksi',    w:104, a:'left',   k:'rujukan'        },
-        { h:'Dibayar Kepada',       w:150, a:'left',   k:'dibayar_kepada' },
-        { h:'Butiran Transaksi',    w:260, a:'left',   k:'perkara'        },
+        { h:'Tarikh',               w:72,  a:'left',   k:'tarikh'         },
+        { h:'Rujukan Transaksi',    w:96,  a:'left',   k:'rujukan'        },
+        { h:'Dibayar Kepada',       w:132, a:'left',   k:'dibayar_kepada' },
+        { h:'Butiran Transaksi',    w:220, a:'left',   k:'perkara'        },
         { h:'Amaun (RM)',           w:82,  a:'right',  k:'bayaran'        },
-        { h:'Jumlah Bayaran (RM)',  w:84,  a:'right',  k:'jumlah_bayaran' },
-        { h:'Baki Semasa (RM)',     w:84,  a:'right',  k:'baki'           },
+        { h:'Jumlah Bayaran (RM)',  w:87,  a:'right',  k:'jumlah_bayaran' },
+        { h:'Baki Semasa (RM)',     w:87,  a:'right',  k:'baki'           },
       ];
-      const ROW_H = 19;
+      const ROW_H = 18;
       const HDR_H = 22;
       const FOOT_H = 20;
 
@@ -1206,7 +1206,7 @@ app.get('/api/penyata/pdf', requireAuth, (req, res) => {
       function drawRow(row, y, even) {
         doc.rect(MX, y, CONTENT_W, ROW_H).fill(even ? LIGHT : '#fff');
         doc.rect(MX, y+ROW_H-0.5, CONTENT_W, 0.5).fill('#dde0f0');
-        doc.fillColor('#333').fontSize(7).font('Helvetica');
+        doc.fillColor('#333').fontSize(6.5).font('Helvetica');
         let x = MX;
         cols.forEach(c => {
           let val;
@@ -1216,7 +1216,7 @@ app.get('/api/penyata/pdf', requireAuth, (req, res) => {
             doc.fillColor(c.k==='baki' && n<0 ? '#c0392b' : '#333');
           } else {
             const raw = (row[c.k]||'-').toString();
-            const limit = c.k==='perkara' ? 68 : c.k==='dibayar_kepada' ? 26 : 22;
+            const limit = c.k==='perkara' ? 52 : c.k==='dibayar_kepada' ? 22 : 18;
             val = raw.length > limit ? raw.substring(0,limit)+'…' : raw;
           }
           doc.text(val, x+3, y+5, { width:c.w-6, align:c.a });
