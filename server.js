@@ -100,6 +100,41 @@ function pruneOldBackups() {
   }
 }
 
+function getExistingFontPath(candidates) {
+  for (const candidate of candidates) {
+    if (candidate && fs.existsSync(candidate)) return candidate;
+  }
+  return null;
+}
+
+function configurePdfFonts(doc) {
+  const regularPath = getExistingFontPath([
+    process.env.PDF_FONT_REGULAR,
+    path.join(__dirname, 'public', 'fonts', 'NotoSans-Regular.ttf'),
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+    '/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf',
+    'C:\\Windows\\Fonts\\arial.ttf',
+    'C:\\Windows\\Fonts\\segoeui.ttf'
+  ]);
+
+  const boldPath = getExistingFontPath([
+    process.env.PDF_FONT_BOLD,
+    path.join(__dirname, 'public', 'fonts', 'NotoSans-Bold.ttf'),
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+    '/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf',
+    'C:\\Windows\\Fonts\\arialbd.ttf',
+    'C:\\Windows\\Fonts\\segoeuib.ttf'
+  ]);
+
+  if (regularPath) doc.registerFont('AppPdfRegular', regularPath);
+  if (boldPath) doc.registerFont('AppPdfBold', boldPath);
+
+  return {
+    regular: regularPath ? 'AppPdfRegular' : 'Helvetica',
+    bold: boldPath ? 'AppPdfBold' : 'Helvetica-Bold'
+  };
+}
+
 function runSqliteBackup(reason = 'manual') {
   return new Promise((resolve, reject) => {
     if (!BACKUP_ENABLED) {
@@ -126,6 +161,7 @@ function runSqliteBackup(reason = 'manual') {
       sessionBackupFile: fs.existsSync(sessionSrc) ? sessionBackupFile : null,
       error: null
     };
+
 
     const escapedBackupPath = dbBackupFile.replace(/'/g, "''");
 
@@ -1045,6 +1081,7 @@ app.get('/api/export/pdf', requireAuth, (req, res) => {
     const PDFDocument = require('pdfkit');
     const fs = require('fs');
     const doc = new PDFDocument({ margin: 40 });
+    const pdfFonts = configurePdfFonts(doc);
     
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename="data_export.pdf"');
@@ -1063,8 +1100,8 @@ app.get('/api/export/pdf', requireAuth, (req, res) => {
     }
     
     // Header
-    doc.fontSize(18).font('Helvetica-Bold').text('LAPORAN DATA TRANSAKSI', { align: 'center' });
-    doc.fontSize(11).font('Helvetica').text('Data Storage System', { align: 'center' });
+    doc.fontSize(18).font(pdfFonts.bold).text('LAPORAN DATA TRANSAKSI', { align: 'center' });
+    doc.fontSize(11).font(pdfFonts.regular).text('Data Storage System', { align: 'center' });
     doc.moveDown(0.5);
     
     // Date info
@@ -1089,7 +1126,7 @@ app.get('/api/export/pdf', requireAuth, (req, res) => {
     let yPos = doc.y;
     const rowHeight = 25;
     
-    doc.fontSize(10).font('Helvetica-Bold').fillColor('#FFFFFF');
+    doc.fontSize(10).font(pdfFonts.bold).fillColor('#FFFFFF');
     doc.rect(margins, yPos - 5, contentWidth, 20).fill('#2C3E50');
     
     let xPos = margins + 5;
@@ -1106,7 +1143,7 @@ app.get('/api/export/pdf', requireAuth, (req, res) => {
     doc.fillColor('#000000');
     
     // Data rows
-    doc.font('Helvetica');
+    doc.font(pdfFonts.regular);
     doc.fontSize(9);
     let totalBayaran = 0;
     let totalJumlahBayaran = 0;
@@ -1142,7 +1179,7 @@ app.get('/api/export/pdf', requireAuth, (req, res) => {
     // Total row
     yPos += 5;
     doc.rect(margins, yPos - 5, contentWidth, 20).fill('#2C3E50');
-    doc.fillColor('#FFFFFF').font('Helvetica-Bold').fontSize(10);
+    doc.fillColor('#FFFFFF').font(pdfFonts.bold).fontSize(10);
     
     xPos = margins + 5;
     doc.text('JUMLAH', xPos + colWidths[0] + colWidths[1] + colWidths[2], yPos - 2, { width: colWidths[3] - 5, align: 'right' });
@@ -1385,6 +1422,7 @@ app.get('/api/penyata/pdf', requireAuth, (req, res) => {
       const selectedKodLabel = selectedKod ? (selectedKodDesc ? `${selectedKod} - ${selectedKodDesc}` : selectedKod) : 'Semua Kod Kepala VOT';
 
       const doc = new PDFDocument({ size:'A4', layout:'landscape', margin:0, bufferPages:true });
+      const pdfFonts = configurePdfFonts(doc);
       const filename = `Penyata_${bukuVotLabel}_${monthLabel}_${selectedKod || 'SemuaKod'}.pdf`.replace(/ /g,'_');
       res.setHeader('Content-Type','application/pdf');
       res.setHeader('Content-Disposition',`attachment; filename="${filename}"`);
@@ -1447,17 +1485,17 @@ app.get('/api/penyata/pdf', requireAuth, (req, res) => {
 
         if (isFirst) {
           // Organisation name
-          doc.fillColor(NAVY).fontSize(16).font('Helvetica-Bold')
+          doc.fillColor(NAVY).fontSize(16).font(pdfFonts.bold)
              .text('SISTEM PENGURUSAN KEWANGAN', textX, 11, { width:textW });
-           doc.fillColor('#4b5f93').fontSize(9.5).font('Helvetica')
+           doc.fillColor('#4b5f93').fontSize(9.5).font(pdfFonts.regular)
              .text('Sekretariat Sabah Maju Jaya, Jabatan Ketua Menteri', textX, 28, { width:textW });
           // Thin underline
            doc.rect(textX, 42, textW * 0.65, 1).fill('#c8a951');
           // Report subtitle
-          doc.fillColor('#2c4a8c').fontSize(11).font('Helvetica-Bold')
+          doc.fillColor('#2c4a8c').fontSize(11).font(pdfFonts.bold)
              .text('PENYATA TRANSAKSI', textX, 47, { width:textW });
           // Details line
-           doc.fillColor('#555').fontSize(8.5).font('Helvetica')
+           doc.fillColor('#555').fontSize(8.5).font(pdfFonts.regular)
              .text(`Maklumat Buku VOT: ${bukuVotLabel}`, textX, 62, { width:textW });
            doc.fillColor('#555').fontSize(8.5)
              .text(`Kod Kepala VOT: ${selectedKodLabel}`, textX, 74, { width:textW });
@@ -1467,9 +1505,9 @@ app.get('/api/penyata/pdf', requireAuth, (req, res) => {
           doc.fillColor('#888').fontSize(7.5)
              .text(`Tarikh Cetak: ${new Date().toLocaleDateString('ms-MY')}`, MX, HEADER_H - 19, { width:CONTENT_W, align:'right' });
         } else {
-          doc.fillColor(NAVY).fontSize(13).font('Helvetica-Bold')
+           doc.fillColor(NAVY).fontSize(13).font(pdfFonts.bold)
              .text('PENYATA TRANSAKSI', textX, 18, { width:textW });
-          doc.fillColor('#555').fontSize(8.5).font('Helvetica')
+           doc.fillColor('#555').fontSize(8.5).font(pdfFonts.regular)
              .text(`Buku VOT: ${bukuVotLabel}   ·   Kod: ${selectedKod || 'Semua'}   ·   Bulan: ${monthLabel}   ·   (sambungan)`, textX, 40, { width:textW });
           doc.fillColor('#888').fontSize(7.5)
              .text(`Tarikh Cetak: ${new Date().toLocaleDateString('ms-MY')}`, MX, HEADER_H - 18, { width:CONTENT_W, align:'right' });
@@ -1479,7 +1517,7 @@ app.get('/api/penyata/pdf', requireAuth, (req, res) => {
 
       function drawTableHeader(y) {
         doc.rect(MX, y, CONTENT_W, HDR_H).fill(NAVY);
-        doc.fillColor('#fff').fontSize(7.5).font('Helvetica-Bold');
+        doc.fillColor('#fff').fontSize(7.5).font(pdfFonts.bold);
         let x = MX;
         cols.forEach(c => {
           doc.text(c.h, x+3, y+(HDR_H-7.5)/2+1, { width:c.w-6, align:c.a });
@@ -1491,7 +1529,7 @@ app.get('/api/penyata/pdf', requireAuth, (req, res) => {
       function drawRow(row, y, even) {
         doc.rect(MX, y, CONTENT_W, ROW_H).fill(even ? LIGHT : '#fff');
         doc.rect(MX, y+ROW_H-0.5, CONTENT_W, 0.5).fill('#dde0f0');
-        doc.fillColor('#333').fontSize(6.5).font('Helvetica');
+        doc.fillColor('#333').fontSize(6.5).font(pdfFonts.regular);
         let x = MX;
         cols.forEach(c => {
           let val;
@@ -1513,7 +1551,7 @@ app.get('/api/penyata/pdf', requireAuth, (req, res) => {
 
       function drawTotals(y, tot) {
         doc.rect(MX, y, CONTENT_W, HDR_H).fill(NAVY);
-        doc.fillColor('#fff').fontSize(7).font('Helvetica-Bold');
+        doc.fillColor('#fff').fontSize(7).font(pdfFonts.bold);
         let x = MX;
         cols.forEach((c,ci) => {
           let val = '';
@@ -1663,7 +1701,7 @@ app.get('/api/penyata/pdf', requireAuth, (req, res) => {
         let yPos = drawHeader(pageFirst) + TABLE_TOP_GAP;
         pageFirst = false;
 
-        doc.fillColor('#2c4a8c').fontSize(9).font('Helvetica-Bold')
+        doc.fillColor('#2c4a8c').fontSize(9).font(pdfFonts.bold)
           .text(`BULAN: ${monthLabelText}`, MX, yPos, { width: CONTENT_W });
         yPos += 14;
 
@@ -1685,7 +1723,7 @@ app.get('/api/penyata/pdf', requireAuth, (req, res) => {
           if (yPos + ROW_H > PH - BOTTOM_RESERVE) {
             doc.addPage({ size:'A4', layout:'landscape', margin:0 });
             yPos = drawHeader(false) + TABLE_TOP_GAP;
-            doc.fillColor('#2c4a8c').fontSize(9).font('Helvetica-Bold')
+            doc.fillColor('#2c4a8c').fontSize(9).font(pdfFonts.bold)
               .text(`BULAN: ${monthLabelText} (sambungan)`, MX, yPos, { width: CONTENT_W });
             yPos += 14;
             yPos = drawTableHeader(yPos);
@@ -1701,7 +1739,7 @@ app.get('/api/penyata/pdf', requireAuth, (req, res) => {
         if (totalsY + HDR_H + 16 > PH - FOOT_H - 6) {
           doc.addPage({ size:'A4', layout:'landscape', margin:0 });
           yPos = drawHeader(false) + TABLE_TOP_GAP;
-          doc.fillColor('#2c4a8c').fontSize(9).font('Helvetica-Bold')
+          doc.fillColor('#2c4a8c').fontSize(9).font(pdfFonts.bold)
             .text(`BULAN: ${monthLabelText} (ringkasan)`, MX, yPos, { width: CONTENT_W });
           yPos += 14;
           yPos = drawTableHeader(yPos);
@@ -1709,7 +1747,7 @@ app.get('/api/penyata/pdf', requireAuth, (req, res) => {
         }
 
         drawTotals(totalsY, monthTot);
-        doc.fillColor('#444').fontSize(8.5).font('Helvetica')
+        doc.fillColor('#444').fontSize(8.5).font(pdfFonts.regular)
           .text(
             `Jumlah Rekod Bulan ${mm}: ${monthData.length}   ·   Amaun (RM): ${fmtAmount(monthTot.bayaran)}   ·   Jumlah Bayaran (RM): ${fmtAmount(monthTot.jumlah_bayaran)}   ·   Baki Semasa (RM): ${fmtAmount(monthTot.baki)}`,
             MX,
@@ -1730,7 +1768,7 @@ app.get('/api/penyata/pdf', requireAuth, (req, res) => {
         const fy = PH - 18;
         doc.rect(0, fy-5, PW, 23).fill('#f0f2f8');
         doc.rect(0, fy-6, PW, 1).fill(NAVY);
-        doc.fillColor('#666').fontSize(7).font('Helvetica');
+        doc.fillColor('#666').fontSize(7).font(pdfFonts.regular);
         doc.text(`Dijana pada: ${new Date().toLocaleString('ms-MY')}   ·   Sistem Pengurusan Kewangan`, MX, fy, { width:CONTENT_W*0.7 });
         doc.text(`Halaman ${p+1} daripada ${pc}`, MX+CONTENT_W*0.7, fy, { width:CONTENT_W*0.3, align:'right' });
       }
