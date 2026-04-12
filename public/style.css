@@ -897,6 +897,12 @@ body > * {
   white-space: nowrap;
 }
 
+/* Action column should not clip content */
+#dataView .compact-data-table td:nth-child(12) {
+  overflow: visible;
+  white-space: normal;
+}
+
 #dataView .compact-data-table th:nth-child(1),
 #dataView .compact-data-table td:nth-child(1) { width: 36px; text-align: center; }
 #dataView .compact-data-table th:nth-child(2),
@@ -920,55 +926,84 @@ body > * {
 #dataView .compact-data-table th:nth-child(11),
 #dataView .compact-data-table td:nth-child(11) { width: 100px; }
 #dataView .compact-data-table th:nth-child(12),
-#dataView .compact-data-table td:nth-child(12) { width: 150px; }
+#dataView .compact-data-table td:nth-child(12) { width: 170px; }
 
+#dataView .compact-data-table tbody tr {
+  --row-bg: #ffffff;
+}
+
+#dataView .compact-data-table tbody tr.voucher-cancel-row {
+  --row-bg: #f1fff7;
+}
+
+#dataView .compact-data-table tbody tr.voucher-cancelled-row {
+  --row-bg: #fff8ea;
+}
+
+#dataView .compact-data-table tbody tr:hover {
+  --row-bg: #edf3ff;
+}
+
+#dataView .compact-data-table tbody td {
+  background: var(--row-bg);
+}
+
+/* Sticky column for actions - must be topmost */
+#dataView .compact-data-table th:nth-child(12),
+#dataView .compact-data-table td:nth-child(12) {
+  position: sticky;
+  right: 0;
+  z-index: 9;
+  background: var(--row-bg, #ffffff);
+}
+
+#dataView .compact-data-table thead th:nth-child(12) {
+  background: #667eea;
+  color: #fff;
+  z-index: 10;
+}
+
+/* Sticky columns for financial data */
 #dataView .compact-data-table th:nth-child(11),
 #dataView .compact-data-table td:nth-child(11) {
   position: sticky;
-  right: 150px;
-  z-index: 4;
-  background: #ffffff;
+  right: 170px;
+  z-index: 8;
+  background: var(--row-bg, #ffffff);
 }
 
-/* Keep key finance columns visible during horizontal scroll */
 #dataView .compact-data-table th:nth-child(10),
 #dataView .compact-data-table td:nth-child(10) {
   position: sticky;
-  right: 250px;
-  z-index: 4;
-  background: #ffffff;
+  right: 270px;
+  z-index: 7;
+  background: var(--row-bg, #ffffff);
 }
 
 #dataView .compact-data-table th:nth-child(9),
 #dataView .compact-data-table td:nth-child(9) {
   position: sticky;
-  right: 372px;
-  z-index: 4;
-  background: #ffffff;
+  right: 392px;
+  z-index: 6;
+  background: var(--row-bg, #ffffff);
 }
 
 #dataView .compact-data-table th:nth-child(8),
 #dataView .compact-data-table td:nth-child(8) {
   position: sticky;
-  right: 494px;
-  z-index: 4;
-  background: #ffffff;
+  right: 514px;
+  z-index: 5;
+  background: var(--row-bg, #ffffff);
 }
 
+/* Header sticky columns */
 #dataView .compact-data-table thead th:nth-child(8),
 #dataView .compact-data-table thead th:nth-child(9),
 #dataView .compact-data-table thead th:nth-child(10),
 #dataView .compact-data-table thead th:nth-child(11) {
   background: #667eea;
   color: #fff;
-  z-index: 6;
-}
-
-#dataView .compact-data-table td:nth-child(8),
-#dataView .compact-data-table td:nth-child(9),
-#dataView .compact-data-table td:nth-child(10),
-#dataView .compact-data-table td:nth-child(11) {
-  box-shadow: -1px 0 0 #e6e9f2;
+  z-index: 10;
 }
 
 #dataView .compact-data-table .truncate-cell {
@@ -976,6 +1011,23 @@ body > * {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Ensure action buttons are always visible in compact table */
+#dataView .compact-data-table .edit-btn,
+#dataView .compact-data-table .delete-btn,
+#dataView .compact-data-table .cancel-btn {
+  font-size: 11px;
+  padding: 5px 9px;
+  margin: 2px 2px 2px 0;
+  display: inline-block;
+  visibility: visible;
+  opacity: 1;
+}
+
+#dataView .compact-data-table .action-note {
+  display: inline-block;
+  visibility: visible;
 }
 
 @media (max-width: 1280px) {

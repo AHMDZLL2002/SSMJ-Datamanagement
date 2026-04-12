@@ -1831,8 +1831,10 @@
               <td>${fmtRM(item.jumlah_bayaran)}</td>
               <td>${fmtRM(item.baki)}</td>
               <td>${getVoucherStatusBadge(item)}</td>
-              <td style="white-space:nowrap;">
-                ${getDataActionButtons(item)}
+              <td style="white-space:normal; min-width:170px; display:table-cell; vertical-align:middle;">
+                <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
+                  ${getDataActionButtons(item)}
+                </div>
               </td>
             `;
             tbody.appendChild(row);
