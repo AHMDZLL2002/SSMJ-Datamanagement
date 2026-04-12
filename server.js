@@ -184,7 +184,7 @@ app.get('/api/data/debug', (req, res) => {
 
 // Create data entry
 app.post('/api/data', requireAuth, upload.single('image'), (req, res) => {
-  const { category, tarikh, rujukan, dibayar_kepada, kepala_vot, perkara, liabiliti, bayaran } = req.body;
+  const { category, tarikh, rujukan, dibayar_kepada, kepala_vot, aktiviti, perkara, liabiliti, bayaran } = req.body;
   const image = req.file ? '/uploads/' + req.file.filename : null;
   const userId = req.session.userId;
 
@@ -205,9 +205,9 @@ app.post('/api/data', requireAuth, upload.single('image'), (req, res) => {
           const peruntukan = budget ? parseFloat(budget.peruntukan) || 0 : 0;
           const baki = peruntukan - jumlah_bayaran;
 
-          db.run(`INSERT INTO data (user_id, category, tarikh, rujukan, dibayar_kepada, kepala_vot, perkara, liabiliti, bayaran, jumlah_bayaran, baki, image)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [userId, categoryNormalized, tarikh, rujukan, dibayar_kepada, kepala_vot, perkara, liabiliti, bayaranAmount, jumlah_bayaran, baki, image],
+          db.run(`INSERT INTO data (user_id, category, tarikh, rujukan, dibayar_kepada, kepala_vot, aktiviti, perkara, liabiliti, bayaran, jumlah_bayaran, baki, image)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [userId, categoryNormalized, tarikh, rujukan, dibayar_kepada, kepala_vot, aktiviti || '', perkara, liabiliti, bayaranAmount, jumlah_bayaran, baki, image],
             function(insertErr) {
               if (insertErr) {
                 console.error('Database error inserting data:', insertErr);
@@ -496,10 +496,10 @@ app.get('/api/kepala-vot', requireAuth, (req, res) => {
 
 // Add kepala vot option (admin only)
 app.post('/api/kepala-vot', requireAdmin, (req, res) => {
-  const { kod, keterangan, category } = req.body;
+  const { aktiviti, kod, keterangan, category } = req.body;
   if (!kod) return res.status(400).json({ error: 'Kod diperlukan' });
   if (!category) return res.status(400).json({ error: 'Kategori diperlukan' });
-  db.run('INSERT INTO kepala_vot_list (kod, keterangan, category) VALUES (?, ?, ?)', [kod.trim(), keterangan || '', category.toLowerCase()], function(err) {
+  db.run('INSERT INTO kepala_vot_list (aktiviti, kod, keterangan, category) VALUES (?, ?, ?, ?)', [aktiviti || '', kod.trim(), keterangan || '', category.toLowerCase()], function(err) {
     if (err) return res.status(500).json({ error: 'Database error' });
     res.json({ success: true, id: this.lastID });
   });

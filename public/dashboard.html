@@ -460,8 +460,13 @@
             <h1>&#128278; Urus Senarai Kepala VOT</h1>
           </div>
           <div class="form-card" style="max-width:700px;margin:0 auto 24px;">
-            <h3 style="margin-bottom:16px;">Tambah Kepala VOT Baharu</h3>
-            <div style="display:grid;grid-template-columns:120px 1fr 1fr auto;gap:12px;align-items:end;">
+            <div style="margin-bottom:6px;font-size:0.82rem;font-weight:700;color:#4a5eaa;">PROGRAM : 210000 SEKRETARIAT SABAH MAJU JAYA</div>
+            <h3 style="margin-bottom:16px;">Maklumat Kepala VOT</h3>
+            <div style="display:grid;grid-template-columns:1fr 120px 1fr 1fr auto;gap:12px;align-items:end;">
+              <div>
+                <label style="font-size:0.85rem;font-weight:600;display:block;margin-bottom:4px;">Aktiviti</label>
+                <input type="text" id="kvAktivitiInput" placeholder="cth: Program Operasi" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;">
+              </div>
               <div>
                 <label style="font-size:0.85rem;font-weight:600;display:block;margin-bottom:4px;">Kod</label>
                 <input type="text" id="kvKodInput" placeholder="cth: A001" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;">
@@ -508,6 +513,7 @@
               <thead>
                 <tr>
                   <th>#</th>
+                  <th>Aktiviti</th>
                   <th>Kod</th>
                   <th>Keterangan</th>
                   <th>Kategori</th>
@@ -515,7 +521,7 @@
                 </tr>
               </thead>
               <tbody id="kepalaVotAdminBody">
-                <tr><td colspan="5" style="text-align:center;padding:20px;">Memuatkan...</td></tr>
+                <tr><td colspan="6" style="text-align:center;padding:20px;">Memuatkan...</td></tr>
               </tbody>
             </table>
           </div>
@@ -1315,29 +1321,30 @@
       try {
         const resp = await fetch('/api/kepala-vot', { credentials: 'same-origin' });
         const result = await resp.json();
-        if (!result.success) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Ralat memuatkan data.</td></tr>'; return; }
+        if (!result.success) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Ralat memuatkan data.</td></tr>'; return; }
         const all = result.data;
         const filtered = filterCat ? all.filter(kv => (kv.category||'').toLowerCase() === filterCat) : all;
         const badge = document.getElementById('kvCountBadge');
         if (badge) badge.textContent = filtered.length + ' rekod' + (filterCat ? ' dalam kategori ini' : ' keseluruhan');
         if (!filtered.length) {
-          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">Tiada Kepala VOT' + (filterCat ? ' untuk kategori ini.' : ' didaftarkan.') + '</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#888;">Tiada Kepala VOT' + (filterCat ? ' untuk kategori ini.' : ' didaftarkan.') + '</td></tr>';
           return;
         }
         tbody.innerHTML = filtered.map((kv, i) => {
           const cat = (kv.category || 'umum').toLowerCase();
           const col = catColor[cat] || '#95a5a6';
           const lbl = catLabel[cat] || cat;
-          return '<tr><td>' + (i+1) + '</td><td><strong>' + kv.kod + '</strong></td><td>' + (kv.keterangan||'-') + '</td>'
+          return '<tr><td>' + (i+1) + '</td><td>' + (kv.aktiviti || '-') + '</td><td><strong>' + kv.kod + '</strong></td><td>' + (kv.keterangan||'-') + '</td>'
             + '<td><span style="background:' + col + ';color:#fff;padding:2px 8px;border-radius:10px;font-size:0.78rem;font-weight:600;">' + lbl + '</span></td>'
             + '<td><button onclick="deleteKepalaVot(' + kv.id + ')" style="padding:4px 12px;background:#e74c3c;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:0.8rem;">Padam</button></td></tr>';
         }).join('');
       } catch(e) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Ralat sambungan.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Ralat sambungan.</td></tr>';
       }
     }
 
     async function saveKepalaVot() {
+      const aktiviti = document.getElementById('kvAktivitiInput').value.trim();
       const kod = document.getElementById('kvKodInput').value.trim();
       const keterangan = document.getElementById('kvKeteranganInput').value.trim();
       const category = document.getElementById('kvCategoryInput').value;
@@ -1347,12 +1354,13 @@
         const resp = await fetch('/api/kepala-vot', {
           method: 'POST', credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ kod, keterangan, category })
+          body: JSON.stringify({ aktiviti, kod, keterangan, category })
         });
         const result = await resp.json();
         if (result.success) {
           msg.style.color = '#27ae60';
           msg.textContent = 'Kepala VOT berjaya ditambah.';
+          document.getElementById('kvAktivitiInput').value = '';
           document.getElementById('kvKodInput').value = '';
           document.getElementById('kvKeteranganInput').value = '';
           // Reset filter dropdowns so they reload fresh on next Buku Vot open

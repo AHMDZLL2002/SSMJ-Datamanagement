@@ -71,6 +71,7 @@ db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS kepala_vot_list (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      aktiviti TEXT,
       kod TEXT NOT NULL,
       keterangan TEXT,
       category TEXT DEFAULT 'umum',
@@ -104,6 +105,14 @@ db.serialize(() => {
           else console.log('Added kepala_vot column to data table');
         });
       }
+
+      const hasAktiviti = columns.some(col => col.name === 'aktiviti');
+      if (!hasAktiviti) {
+        db.run(`ALTER TABLE data ADD COLUMN aktiviti TEXT`, (err) => {
+          if (err) console.error('Error adding aktiviti column:', err);
+          else console.log('Added aktiviti column to data table');
+        });
+      }
     }
   });
 
@@ -115,6 +124,14 @@ db.serialize(() => {
         db.run(`ALTER TABLE kepala_vot_list ADD COLUMN category TEXT DEFAULT 'umum'`, (err) => {
           if (err) console.error('Error adding category to kepala_vot_list:', err);
           else console.log('Added category column to kepala_vot_list');
+        });
+      }
+
+      const hasAktiviti = columns.some(col => col.name === 'aktiviti');
+      if (!hasAktiviti) {
+        db.run(`ALTER TABLE kepala_vot_list ADD COLUMN aktiviti TEXT`, (err) => {
+          if (err) console.error('Error adding aktiviti to kepala_vot_list:', err);
+          else console.log('Added aktiviti column to kepala_vot_list');
         });
       }
     }
