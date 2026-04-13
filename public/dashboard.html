@@ -1450,8 +1450,17 @@
             let catBayaran = 0;
             let catJumlahBayaran = 0;
             categoryData.forEach(item => {
-              catBayaran += parseFloat(item.bayaran) || 0;
-              catJumlahBayaran += parseFloat(item.jumlah_bayaran) || 0;
+              const amount = parseFloat(item.bayaran) || 0;
+              const type = String(item.transaction_type || 'bill').trim();
+              const status = String(item.voucher_status || 'active').trim();
+
+              // Net spending includes cancellation entries (negative) to reflect current used amount.
+              catBayaran += amount;
+
+              // "Jumlah Bayaran" should be based on original bill amounts, not cumulative running totals.
+              if (type === 'bill' && status !== 'cancelled') {
+                catJumlahBayaran += amount;
+              }
             });
 
             const catPeruntukan = kvByCategory.reduce((sum, kv) => sum + (parseFloat(kv.peruntukan) || 0), 0);
