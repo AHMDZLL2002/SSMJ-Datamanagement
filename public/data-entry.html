@@ -334,7 +334,39 @@
   <script>
     const rawCat  = sessionStorage.getItem('billCategory') || 'perbekalan';
     const category = rawCat.toLowerCase();
+    const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;
+    const ACTIVITY_EVENTS = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    let inactivityTimeoutId = null;
+    let autoLogoutInProgress = false;
     document.getElementById('catBadge').textContent = 'Masukkan Data';
+
+    async function triggerAutoLogout() {
+      if (autoLogoutInProgress) return;
+      autoLogoutInProgress = true;
+      try {
+        await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
+      } catch (error) {
+        console.error('Auto logout failed:', error);
+      } finally {
+        window.location.href = '/';
+      }
+    }
+
+    function resetInactivityTimer() {
+      if (autoLogoutInProgress) return;
+      if (inactivityTimeoutId) clearTimeout(inactivityTimeoutId);
+      inactivityTimeoutId = setTimeout(triggerAutoLogout, INACTIVITY_TIMEOUT_MS);
+    }
+
+    function initializeInactivityLogout() {
+      ACTIVITY_EVENTS.forEach((eventName) => {
+        document.addEventListener(eventName, resetInactivityTimer, { passive: true });
+      });
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) resetInactivityTimer();
+      });
+      resetInactivityTimer();
+    }
 
     async function loadUserInfo() {
       try {
@@ -464,6 +496,8 @@
     });
 
     async function logout() {
+      if (inactivityTimeoutId) clearTimeout(inactivityTimeoutId);
+      autoLogoutInProgress = true;
       try { const r = await fetch('/api/logout',{method:'POST',credentials:'same-origin'}); if((await r.json()).success) window.location.href='/'; } catch(e){}
     }
 
@@ -499,6 +533,7 @@
     document.getElementById('tarikh').value = new Date().toISOString().split('T')[0];
     loadUserInfo();
     loadBalance();
+    initializeInactivityLogout();
   </script>
 </body>
 </html>

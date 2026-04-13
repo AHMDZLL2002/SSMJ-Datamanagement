@@ -14,6 +14,8 @@ const BACKUP_DIR = process.env.BACKUP_DIR || path.join(path.dirname(DB_FILE_PATH
 const BACKUP_ENABLED = (process.env.BACKUP_ENABLED || 'true').toLowerCase() !== 'false';
 const BACKUP_INTERVAL_HOURS = Math.max(1, parseInt(process.env.BACKUP_INTERVAL_HOURS || '24', 10));
 const BACKUP_RETENTION_COUNT = Math.max(1, parseInt(process.env.BACKUP_RETENTION_COUNT || '14', 10));
+const SESSION_IDLE_MINUTES = Math.max(3, parseInt(process.env.SESSION_IDLE_MINUTES || '5', 10));
+const SESSION_IDLE_TIMEOUT_MS = SESSION_IDLE_MINUTES * 60 * 1000;
 
 let backupInProgress = false;
 let lastBackupInfo = {
@@ -51,9 +53,10 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
+  rolling: true,
   cookie: {
     secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days — survives browser close
+    maxAge: SESSION_IDLE_TIMEOUT_MS // Auto-expire after inactivity
   }
 }));
 
