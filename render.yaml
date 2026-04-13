@@ -1,6 +1,6 @@
 services:
 - type: web
-  name: SSMJ-Datamanagement
+  name: ssmj-dms
   env: node
   plan: starter
   buildCommand: npm install
@@ -12,6 +12,8 @@ services:
     value: /var/data/app.db
   - key: SESSION_SECRET
     generateValue: true
+  - key: PUBLIC_BASE_URL
+    value: https://ssmj-dms.onrender.com
   - key: BACKUP_ENABLED
     value: "true"
   - key: BACKUP_INTERVAL_HOURS
